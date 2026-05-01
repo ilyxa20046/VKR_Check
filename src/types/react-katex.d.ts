@@ -3,7 +3,7 @@ declare module 'react-katex' {
   interface MathProps {
     math: string;
     errorColor?: string;
-    renderError?: (error: Error) => React.ReactNode;
+    renderError?: (error: Error | TypeError) => React.ReactNode;
   }
   export const InlineMath: React.FC<MathProps>;
   export const BlockMath: React.FC<MathProps>;

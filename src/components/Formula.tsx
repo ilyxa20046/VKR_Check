@@ -1,6 +1,6 @@
 import React from 'react';
-import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
 interface FormulaProps {
   math: string;
@@ -8,7 +8,7 @@ interface FormulaProps {
   label?: string;
 }
 
-export const Formula: React.FC<FormulaProps> = ({ math, block = false, label }) => {
+export const Formula: React.FC<FormulaProps> = ({ math, block, label }) => {
   if (block) {
     return (
       <div className="flex items-center justify-center gap-4 my-3 overflow-x-auto">
