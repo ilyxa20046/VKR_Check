@@ -1,7 +1,5 @@
 // BER data generated from simulation formulas matching the implemented models
 
-// AWGN theoretical BER for BPSK: BER = Q(sqrt(2*Eb/N0))
-// Q(x) = 0.5 * erfc(x / sqrt(2))
 function erfc(x: number): number {
   const t = 1 / (1 + 0.3275911 * Math.abs(x));
   const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
@@ -13,43 +11,34 @@ function qFunc(x: number): number {
   return 0.5 * erfc(x / Math.sqrt(2));
 }
 
-// SNR points in dB (Eb/N0)
 export const snrPoints = [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-// Theoretical BPSK AWGN BER
 export function bpskAwgnBer(ebN0dB: number): number {
   const ebN0 = Math.pow(10, ebN0dB / 10);
   return qFunc(Math.sqrt(2 * ebN0));
 }
 
-// Theoretical QPSK AWGN BER (same as BPSK per bit)
 export function qpskAwgnBer(ebN0dB: number): number {
   return bpskAwgnBer(ebN0dB);
 }
 
-// Theoretical 16-QAM AWGN BER (approximate)
 export function qam16AwgnBer(ebN0dB: number): number {
   const ebN0 = Math.pow(10, ebN0dB / 10);
   return (3 / 8) * erfc(Math.sqrt(ebN0 * 4 / 10));
 }
 
-// Rayleigh fading BPSK BER theoretical
 export function bpskRayleighBer(ebN0dB: number): number {
   const ebN0 = Math.pow(10, ebN0dB / 10);
   return 0.5 * (1 - Math.sqrt(ebN0 / (1 + ebN0)));
 }
 
-// LDPC coded BER (simulated) — normalized min-sum, rate 1/2
-// AWGN channel, BPSK modulation — учебный профиль (24,12)
 export function ldpcEduBpskAwgn(ebN0dB: number): number {
-  // Threshold ~1.5 dB, waterfall ~2-4 dB range
   const threshold = 1.5;
   if (ebN0dB < threshold) return bpskAwgnBer(ebN0dB) * 0.9;
   const excess = ebN0dB - threshold;
   return Math.max(1e-7, bpskAwgnBer(ebN0dB) * Math.exp(-1.8 * excess));
 }
 
-// LDPC QC-inspired (96,48) AWGN BPSK
 export function ldpcQcBpskAwgn(ebN0dB: number): number {
   const threshold = 1.0;
   if (ebN0dB < threshold) return bpskAwgnBer(ebN0dB) * 0.88;
@@ -57,7 +46,6 @@ export function ldpcQcBpskAwgn(ebN0dB: number): number {
   return Math.max(1e-8, bpskAwgnBer(ebN0dB) * Math.exp(-2.2 * excess));
 }
 
-// 5G NR BG1 (Z=8) QPSK AWGN
 export function ldpcNrBg1QpskAwgn(ebN0dB: number): number {
   const threshold = 0.8;
   if (ebN0dB < threshold) return bpskAwgnBer(ebN0dB) * 0.92;
@@ -65,7 +53,6 @@ export function ldpcNrBg1QpskAwgn(ebN0dB: number): number {
   return Math.max(1e-8, bpskAwgnBer(ebN0dB) * Math.exp(-2.5 * excess));
 }
 
-// 5G NR BG1 16-QAM Rayleigh
 export function ldpcNrBg1Qam16Rayleigh(ebN0dB: number): number {
   const threshold = 4.0;
   if (ebN0dB < threshold) return bpskRayleighBer(ebN0dB) * 0.95;
@@ -73,12 +60,10 @@ export function ldpcNrBg1Qam16Rayleigh(ebN0dB: number): number {
   return Math.max(1e-6, bpskRayleighBer(ebN0dB) * Math.exp(-1.5 * excess));
 }
 
-// Uncoded reference BPSK AWGN
 export function uncodedBpskAwgn(ebN0dB: number): number {
   return bpskAwgnBer(ebN0dB);
 }
 
-// BLER curves (block error rate)
 export function ldpcEduBlerAwgn(ebN0dB: number): number {
   const ber = ldpcEduBpskAwgn(ebN0dB);
   const n = 24;
@@ -97,7 +82,6 @@ export function ldpcNrBg1BlerAwgn(ebN0dB: number): number {
   return 1 - Math.pow(1 - ber, n);
 }
 
-// Generate chart data
 export function generateBerChartData() {
   return snrPoints.map(snr => ({
     snr,
@@ -118,7 +102,6 @@ export function generateBlerChartData() {
   }));
 }
 
-// Throughput data (Mbps) at 20 Mbaud symbol rate
 export function generateThroughputData() {
   return snrPoints.map(snr => {
     const bler5gnr = ldpcNrBg1BlerAwgn(snr);
@@ -133,7 +116,6 @@ export function generateThroughputData() {
   });
 }
 
-// Coding gain: difference in required SNR at BER=1e-3
 export const codingGainTable = [
   { profile: "LDPC (24,12) R=1/2", modulation: "BPSK", channel: "AWGN", requiredSnrCoded: 2.8, requiredSnrUncoded: 6.8, codingGain: 4.0 },
   { profile: "QC-LDPC (96,48) R=1/2", modulation: "BPSK", channel: "AWGN", requiredSnrCoded: 2.1, requiredSnrUncoded: 6.8, codingGain: 4.7 },
@@ -141,7 +123,6 @@ export const codingGainTable = [
   { profile: "5G NR BG1 Z=8, R=1/2", modulation: "16-QAM", channel: "Rayleigh", requiredSnrCoded: 7.5, requiredSnrUncoded: 14.2, codingGain: 6.7 },
 ];
 
-// Spectral efficiency
 export function generateSpectralEffData() {
   return snrPoints.map(snr => {
     const bler5gnr = ldpcNrBg1BlerAwgn(snr);
@@ -155,7 +136,6 @@ export function generateSpectralEffData() {
   });
 }
 
-// Iteration convergence data
 export const iterationData = [
   { snr: -2, avgIter: 49.2, convergence: 12 },
   { snr: 0, avgIter: 42.1, convergence: 38 },

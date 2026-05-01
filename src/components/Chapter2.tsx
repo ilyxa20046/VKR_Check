@@ -58,9 +58,8 @@ export const Chapter2: React.FC = () => {
         <Para>
           Вероятность ошибки на блок (BLER — Block Error Rate) характеризует долю блоков,
           декодированных с ошибкой. При использовании CRC-проверки блок считается ошибочным,
-          если CRC-проверка провалена. При отсутствии CRC (в реализованной системе — при
-          критерии bit mismatch) блок считается ошибочным при наличии хотя бы одного
-          ошибочного бита:
+          если CRC-проверка не пройдена. В системе 5G NR целевой показатель BLER для начального
+          приёма составляет 10%, что обеспечивает баланс между надёжностью и пропускной способностью:
         </Para>
 
         <Formula
@@ -89,7 +88,9 @@ export const Chapter2: React.FC = () => {
 
         <Para>
           Спектральная эффективность (SE — Spectral Efficiency) выражает число информационных
-          бит, передаваемых в единицу полосы частот за единицу времени (бит/с/Гц):
+          бит, передаваемых в единицу полосы частот за единицу времени (бит/с/Гц). Предел
+          Шеннона определяет теоретическую верхнюю границу спектральной эффективности для
+          заданного SNR:
         </Para>
 
         <Formula
@@ -104,21 +105,20 @@ export const Chapter2: React.FC = () => {
         </Para>
 
         <Formula
-          math="\eta_{\text{OFDM-128}} = 0.93 \cdot \frac{128}{128 + N_{CP}} \cdot \eta_{\text{eq}}"
+          math="\eta_{\text{OFDM-128}} = 0{,}93 \cdot \frac{128}{128 + N_{CP}} \cdot \eta_{\text{eq}}"
           block
           label="2.5"
         />
 
         <Para>
-          где <Formula math="\eta_{\text{eq}} = 0.95" /> для ZF-эквализатора и{' '}
-          <Formula math="\eta_{\text{eq}} = 0.85" /> без эквализации.
+          где <Formula math="\eta_{\text{eq}} = 0{,}95" /> для ZF-эквализатора и{' '}
+          <Formula math="\eta_{\text{eq}} = 0{,}85" /> без эквализации.
         </Para>
 
         <Para>
           Энергетический выигрыш от кодирования (Coding Gain) <Formula math="G_c" />
           определяется как разность требуемых значений <Formula math="E_b/N_0" /> при заданном
-          уровне BER (обычно <Formula math="10^{-3}" />) для некодированной и кодированной
-          систем:
+          уровне BER (обычно <Formula math="10^{-3}" />) для некодированной и кодированной систем:
         </Para>
 
         <Formula
@@ -126,12 +126,6 @@ export const Chapter2: React.FC = () => {
           block
           label="2.6"
         />
-
-        <Para>
-          Требуемое <Formula math="E_b/N_0" /> для LDPC-кода с параметрами (<Formula math="n,k" />)
-          при BER = <Formula math="p_0" /> вычисляется методом интерполяции по результатам
-          симуляции или по теоретической кривой.
-        </Para>
       </Section>
 
       {/* 2.2 */}
@@ -172,122 +166,76 @@ export const Chapter2: React.FC = () => {
         </div>
 
         <Para>
-          Анализ рисунка 2.1 показывает характерную для LDPC-кодов «ватерфольную» форму кривых
-          BER: при значениях Eb/N0 ниже порогового (threshold) BER практически не отличается
-          от некодированного, однако выше порога наблюдается резкое снижение BER на несколько
-          порядков при незначительном увеличении SNR. Это свойство обусловлено итеративным
-          характером декодирования — при достаточном SNR алгоритм BP сходится за несколько
-          итераций.
+          Анализ рисунка 2.1 показывает характерную для LDPC-кодов «водопадную» (waterfall)
+          форму кривых BER: при значениях Eb/N0 ниже порогового (threshold SNR) BER практически
+          не отличается от некодированного, однако выше порога наблюдается резкое снижение BER
+          на несколько порядков при незначительном увеличении SNR. Это свойство обусловлено
+          итеративным характером декодирования — при достаточном SNR алгоритм NMS сходится
+          за 5–15 итераций.
         </Para>
 
         <Para>
-          Порог декодирования определяется плотностью эволюции (density evolution) и
-          зависит от структуры матрицы <Formula math="\mathbf{H}" />. Для гауссовского
-          канала порог <Formula math="E_b/N_0^{*}" /> приближённо оценивается через
-          предел Шеннона при заданной скорости кода:
-        </Para>
-
-        <Formula
-          math="\left.\frac{E_b}{N_0}\right|_{\text{Shannon}} = \frac{2^R - 1}{R} \quad \text{(линейное)}"
-          block
-          label="2.7"
-        />
-
-        <Para>
-          При <Formula math="R = 1/2" />, предел Шеннона составляет{' '}
-          <Formula math="E_b/N_0 = (2^{1/2} - 1) / (1/2) \approx 0.83" /> (линейное) или{' '}
-          <Formula math="-0.8" /> дБ. Реализованный профиль 5G NR BG1 достигает порога
-          декодирования около <Formula math="0.8" /> дБ, что находится в пределах{' '}
-          <Formula math="1.6" /> дБ от предела Шеннона.
+          Профиль 5G NR BG1 (Z=8, QPSK) демонстрирует наилучшие характеристики: порог
+          декодирования составляет около 0,8 дБ, а при Eb/N0 = 3 дБ BER опускается ниже 10⁻⁷.
+          Учебный профиль (24,12) с малым блоком имеет более высокий порог (~1,5 дБ) и
+          более пологую водопадную характеристику, что объясняется наличием коротких циклов
+          в графе Таннера малой размерности. QC-LDPC (96,48) занимает промежуточное положение
+          с порогом ~1,0 дБ.
         </Para>
 
         <Para>
-          Таблица 2.1 обобщает ключевые характеристики BER-кривых для всех профилей.
+          В таблице 2.1 приведены результаты расчёта энергетического выигрыша от кодирования
+          для всех исследуемых профилей при уровне BER = 10⁻³.
         </Para>
 
         <div className="overflow-x-auto my-5">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-green-700 text-white">
-                <th className="border px-4 py-2">Профиль</th>
-                <th className="border px-4 py-2">Порог, дБ</th>
-                <th className="border px-4 py-2">Eb/N0 при BER=10⁻³</th>
-                <th className="border px-4 py-2">Eb/N0 при BER=10⁻⁵</th>
-                <th className="border px-4 py-2">Coding Gain, дБ</th>
+          <table className="w-full text-sm border-collapse border border-gray-300">
+            <thead className="bg-green-700 text-white">
+              <tr>
+                <th className="border border-gray-300 px-3 py-2 text-left">Профиль LDPC</th>
+                <th className="border border-gray-300 px-3 py-2">Модуляция</th>
+                <th className="border border-gray-300 px-3 py-2">Канал</th>
+                <th className="border border-gray-300 px-3 py-2">SNR некод., дБ</th>
+                <th className="border border-gray-300 px-3 py-2">SNR кодир., дБ</th>
+                <th className="border border-gray-300 px-3 py-2">Gc, дБ</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="bg-white">
-                <td className="border px-4 py-2">Без кодирования (BPSK)</td>
-                <td className="border px-4 py-2 text-center">—</td>
-                <td className="border px-4 py-2 text-center">6.8</td>
-                <td className="border px-4 py-2 text-center">9.6</td>
-                <td className="border px-4 py-2 text-center">—</td>
-              </tr>
-              <tr className="bg-gray-50">
-                <td className="border px-4 py-2">LDPC (24,12) R=1/2</td>
-                <td className="border px-4 py-2 text-center">1.5</td>
-                <td className="border px-4 py-2 text-center">2.8</td>
-                <td className="border px-4 py-2 text-center">4.2</td>
-                <td className="border px-4 py-2 text-center font-bold text-green-700">4.0</td>
-              </tr>
-              <tr className="bg-white">
-                <td className="border px-4 py-2">QC-LDPC (96,48) R=1/2</td>
-                <td className="border px-4 py-2 text-center">1.0</td>
-                <td className="border px-4 py-2 text-center">2.1</td>
-                <td className="border px-4 py-2 text-center">3.5</td>
-                <td className="border px-4 py-2 text-center font-bold text-green-700">4.7</td>
-              </tr>
-              <tr className="bg-gray-50">
-                <td className="border px-4 py-2">5G NR BG1 Z=8 QPSK</td>
-                <td className="border px-4 py-2 text-center">0.8</td>
-                <td className="border px-4 py-2 text-center">1.8</td>
-                <td className="border px-4 py-2 text-center">2.9</td>
-                <td className="border px-4 py-2 text-center font-bold text-green-700">5.0</td>
-              </tr>
+              {codingGainTable.map((row, i) => (
+                <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                  <td className="border border-gray-300 px-3 py-2">{row.profile}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center">{row.modulation}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center">{row.channel}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center">{row.requiredSnrUncoded}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center">{row.requiredSnrCoded}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center font-bold text-green-700">{row.codingGain}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
-          <p className="text-sm text-gray-500 mt-1">Таблица 2.1 — Сравнение BER-характеристик LDPC-профилей (AWGN)</p>
+          <p className="text-xs text-gray-500 mt-1 text-center">
+            Таблица 2.1 — Coding Gain LDPC-профилей при BER = 10⁻³
+          </p>
         </div>
       </Section>
 
       {/* 2.3 */}
-      <Section title="2.3. Анализ вероятности ошибки на блок (BLER)" id="ch2-3">
+      <Section title="2.3. Анализ BLER-характеристик и пропускной способности" id="ch2-3">
         <Para>
-          Вероятность ошибки на блок является критической метрикой для оценки надёжности
-          передачи транспортных блоков в системе 5G NR. Стандарт 3GPP определяет
-          требование BLER ≤ 10⁻¹ для номинальной работы канала (первичная передача) и
-          BLER ≤ 10⁻⁵ при использовании HARQ-механизма повторной передачи.
-        </Para>
-
-        <Para>
-          BLER и BER связаны соотношением, справедливым при независимых ошибках в битах:
-        </Para>
-
-        <Formula
-          math="\text{BLER} = 1 - (1 - \text{BER})^{n}"
-          block
-          label="2.8"
-        />
-
-        <Para>
-          где <Formula math="n" /> — длина кодового слова. Для длинных кодов BLER
-          практически равен единице уже при умеренных значениях BER, поэтому
-          помехоустойчивое кодирование критически важно для обеспечения надёжной блоковой
-          передачи.
+          На рисунке 2.2 представлены кривые BLER(Eb/N0) для трёх LDPC-профилей. BLER
+          характеризует вероятность ошибки на уровне транспортного блока, что непосредственно
+          связано с эффективностью протокола HARQ в 5G NR. При BLER &lt; 0,1 система считается
+          работающей в «нормальном» режиме, при BLER → 1 — в «отказном» режиме.
         </Para>
 
         <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
           <p className="text-center text-sm font-semibold text-gray-600 mb-3">
             Рисунок 2.2 — Кривые BLER(Eb/N0) для LDPC-профилей в канале AWGN
           </p>
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={blerData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="snr"
-                label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }}
-              />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }} />
               <YAxis
                 scale="log"
                 domain={[1e-5, 1]}
@@ -304,33 +252,21 @@ export const Chapter2: React.FC = () => {
         </div>
 
         <Para>
-          Кривые BLER на рисунке 2.2 демонстрируют более резкое изменение по сравнению с BER
-          ввиду блокового характера метрики. Профиль 5G NR BG1 обеспечивает BLER = 10⁻¹ при
-          Eb/N0 ≈ 3.5 дБ, тогда как для некодированной передачи такой же BLER достигается
-          лишь при Eb/N0 ≈ 8.5 дБ — выигрыш составляет 5 дБ.
-        </Para>
-      </Section>
-
-      {/* 2.4 */}
-      <Section title="2.4. Анализ пропускной способности и спектральной эффективности" id="ch2-4">
-        <Para>
-          Пропускная способность и спектральная эффективность зависят не только от BER/BLER,
-          но и от схемы модуляции и волновой формы. На рисунке 2.3 показана зависимость
-          пропускной способности от Eb/N0 для трёх конфигураций системы.
+          На рисунке 2.3 показана зависимость эффективной пропускной способности от Eb/N0.
+          Профиль 5G NR BG1 с модуляцией QPSK и OFDM достигает максимальной пропускной
+          способности около 9,3 Мбит/с при Eb/N0 ≥ 4 дБ, что на 84% превышает пропускную
+          способность учебного профиля (24,12) при той же условиях.
         </Para>
 
         <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
           <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-            Рисунок 2.3 — Зависимость пропускной способности от Eb/N0 (символьная скорость 20 Мбод)
+            Рисунок 2.3 — Пропускная способность (Мбит/с) vs Eb/N0 для LDPC-профилей
           </p>
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={throughputData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="snr"
-                label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }}
-              />
-              <YAxis label={{ value: 'Мбит/с', angle: -90, position: 'insideLeft' }} />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }} />
+              <YAxis label={{ value: 'Мбит/с', angle: -90, position: 'insideLeft', offset: 10 }} />
               <Tooltip />
               <Legend verticalAlign="top" />
               <Line type="monotone" dataKey="5G NR BG1 QPSK OFDM" stroke="#dc2626" strokeWidth={2.5} dot={false} />
@@ -339,291 +275,87 @@ export const Chapter2: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        <Para>
-          Конфигурация «5G NR BG1 + QPSK + OFDM-128» обеспечивает максимальную пропускную
-          способность: при Eb/N0 = 8 дБ она достигает около 9 Мбит/с (при символьной скорости
-          20 Мбод). Это объясняется преимуществом 2 бит/символ QPSK по сравнению с 1 бит/символ
-          BPSK при сопоставимых BER-характеристиках.
-        </Para>
-
-        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-            Рисунок 2.4 — Спектральная эффективность (бит/с/Гц) от Eb/N0
-          </p>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={seData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="snr"
-                label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }}
-              />
-              <YAxis label={{ value: 'бит/с/Гц', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend verticalAlign="top" />
-              <Line type="monotone" dataKey="5G NR BG1 QPSK" stroke="#dc2626" strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="QC-LDPC BPSK" stroke="#16a34a" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="Без кодирования BPSK" stroke="#94a3b8" strokeWidth={2} strokeDasharray="8 4" dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
       </Section>
 
-      {/* 2.5 */}
-      <Section title="2.5. Анализ энергетического выигрыша от кодирования (Coding Gain)" id="ch2-5">
+      {/* 2.4 */}
+      <Section title="2.4. Анализ сходимости NMS-декодера и влияние числа итераций" id="ch2-4">
         <Para>
-          Энергетический выигрыш от кодирования является ключевым показателем эффективности
-          схемы помехоустойчивого кодирования. На рисунке 2.5 приведено сравнение
-          Coding Gain для всех реализованных сценариев. Видно, что применение LDPC BG1
-          в канале Rayleigh с 16-QAM обеспечивает максимальный выигрыш 6.7 дБ.
+          Скорость сходимости алгоритма NMS зависит от значения SNR: при высоком SNR декодер
+          сходится за 2–5 итераций, при низком (вблизи порога декодирования) требуется
+          до 50 итераций. На рисунке 2.4 представлена зависимость среднего числа итераций
+          и процента успешной сходимости от Eb/N0 для профиля 5G NR BG1.
         </Para>
 
         <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
           <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-            Рисунок 2.5 — Энергетический выигрыш LDPC-кодирования (при BER = 10⁻³)
+            Рисунок 2.4 — Сходимость NMS-декодера: среднее число итераций и % успеха
           </p>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart
-              data={codingGainTable}
-              margin={{ top: 10, right: 30, left: 10, bottom: 60 }}
-            >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={iterationData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="profile"
-                tick={{ fontSize: 11 }}
-                angle={-15}
-                textAnchor="end"
-                interval={0}
-              />
-              <YAxis
-                label={{ value: 'Coding Gain, дБ', angle: -90, position: 'insideLeft' }}
-                domain={[0, 8]}
-              />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -5 }} />
+              <YAxis yAxisId="left" label={{ value: 'Итераций', angle: -90, position: 'insideLeft' }} />
+              <YAxis yAxisId="right" orientation="right" label={{ value: '% сходимости', angle: 90, position: 'insideRight' }} />
               <Tooltip />
-              <Bar dataKey="codingGain" name="Coding Gain, дБ" radius={[4, 4, 0, 0]}>
-                {codingGainTable.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
+              <Legend />
+              <Bar yAxisId="left" dataKey="avgIter" name="Среднее итераций" fill="#2563eb">
+                {iterationData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Bar>
+              <Line yAxisId="right" type="monotone" dataKey="convergence" name="% сходимости" stroke="#dc2626" strokeWidth={2} dot />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="overflow-x-auto my-5">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-green-700 text-white">
-                <th className="border px-4 py-2">Профиль</th>
-                <th className="border px-4 py-2">Модуляция</th>
-                <th className="border px-4 py-2">Канал</th>
-                <th className="border px-4 py-2">Eb/N0 (код.) дБ</th>
-                <th className="border px-4 py-2">Eb/N0 (некод.) дБ</th>
-                <th className="border px-4 py-2">Coding Gain дБ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {codingGainTable.map((row, i) => (
-                <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="border px-4 py-2 text-sm">{row.profile}</td>
-                  <td className="border px-4 py-2 text-center font-mono">{row.modulation}</td>
-                  <td className="border px-4 py-2 text-center">{row.channel}</td>
-                  <td className="border px-4 py-2 text-center">{row.requiredSnrCoded}</td>
-                  <td className="border px-4 py-2 text-center">{row.requiredSnrUncoded}</td>
-                  <td className="border px-4 py-2 text-center font-bold text-green-700">{row.codingGain}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="text-sm text-gray-500 mt-1">Таблица 2.2 — Coding Gain для реализованных LDPC-профилей</p>
-        </div>
-      </Section>
-
-      {/* 2.6 */}
-      <Section title="2.6. Анализ сходимости декодера и среднего числа итераций" id="ch2-6">
         <Para>
-          Сходимость итеративного декодирования является важной характеристикой практической
-          реализации. При низком SNR (ниже порога) алгоритм NMS использует все{' '}
-          <Formula math="I_{\max} = 50" /> итераций без достижения нулевого синдрома, тогда
-          как при высоком SNR сходимость наступает за 2–5 итераций.
-        </Para>
-
-        <div className="my-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-              Рисунок 2.6а — Среднее число итераций декодера vs SNR
-            </p>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={iterationData} margin={{ top: 5, right: 20, left: 5, bottom: 15 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -8 }} />
-                <YAxis label={{ value: 'Ср. итерации', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="avgIter" name="Сред. итераций" stroke="#7c3aed" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-              Рисунок 2.6б — Доля сходящихся блоков (%) vs SNR
-            </p>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={iterationData} margin={{ top: 5, right: 20, left: 5, bottom: 15 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -8 }} />
-                <YAxis domain={[0, 100]} label={{ value: '% сходимость', angle: -90, position: 'insideLeft' }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="convergence" name="% сходимость" stroke="#dc2626" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <Para>
-          Адаптивная остановка декодирования (реализованная в системе) позволяет
-          сократить среднее число итераций при высоком SNR, что критически важно для
-          аппаратных реализаций в реальном времени. При Eb/N0 = 8 дБ среднее число
-          итераций составляет около 3, тогда как без адаптивной остановки использовались
-          бы все 50 итераций. Экономия вычислительных ресурсов достигает{' '}
-          <Formula math="\approx 94\%" />.
-        </Para>
-
-        <Para>
-          Нормировочный коэффициент алгоритма NMS <Formula math="\alpha = 0.75" />
-          подобран эмпирически. Его влияние на BER описывается следующей зависимостью:
-          при <Formula math="\alpha \to 1" /> алгоритм приближается к sum-product (оптимален,
-          но требователен к вычислениям), при <Formula math="\alpha \to 0" /> система деградирует.
-          Оптимальное значение <Formula math="\alpha_{\text{opt}} \in [0.7, 0.85]" /> для
-          рассматриваемых LDPC-профилей.
+          Анализ данных показывает, что при Eb/N0 = 6 дБ алгоритм NMS сходится в 97% случаев
+          за среднее число итераций 6,8. При Eb/N0 ≥ 8 дБ процент сходимости превышает 99,5%,
+          а среднее число итераций снижается до 3,1. Это подтверждает высокую вычислительную
+          эффективность NMS по сравнению с полным алгоритмом BP, который при схожих показателях
+          сходимости требует в 4–6 раз больше арифметических операций.
         </Para>
       </Section>
 
-      {/* 2.7 */}
-      <Section title="2.7. Влияние MIMO и OFDM на характеристики системы" id="ch2-7">
+      {/* 2.5 */}
+      <Section title="2.5. Спектральная эффективность и сравнение с LDPC vs Turbo" id="ch2-5">
         <Para>
-          Режим пространственного разнесения 2×2 Diversity реализует обработку сигнала от
-          двух независимых пар приёмник-передатчик. При замираниях Рэлея с разнесением
-          мощность принятого сигнала определяется суммой квадратов модулей двух независимых
-          гауссовских случайных величин, что соответствует распределению хи-квадрат степеней
-          свободы 2× (число ветвей):
+          Спектральная эффективность (SE) является ключевым показателем эффективности
+          использования частотного ресурса. На рисунке 2.5 представлено сравнение SE
+          для различных конфигураций системы.
         </Para>
 
-        <Formula
-          math="\gamma_{\text{div}} = \sum_{b=1}^{B} |h_b|^2 \cdot \frac{E_s}{N_0}"
-          block
-          label="2.9"
-        />
-
-        <Para>
-          где <Formula math="B" /> — число ветвей разнесения. Для 2×2 Diversity
-          используется <Formula math="B = 4" /> (2 передатчика × 2 приёмника). Это позволяет
-          значительно сгладить «провалы» замирания, существенно улучшая BER-характеристику.
-        </Para>
-
-        <Para>
-          OFDM-мультиплексирование позволяет использовать ZF-эквализацию (Zero-Forcing)
-          на каждой поднесущей независимо. Оценка канала на <Formula math="k" />-й
-          поднесущей и компенсация:
-        </Para>
-
-        <Formula
-          math="\hat{X}[k] = \frac{Y[k]}{H[k]}"
-          block
-          label="2.10"
-        />
-
-        <Para>
-          где <Formula math="Y[k]" /> — принятый символ, <Formula math="H[k]" /> — оценка
-          частотной характеристики канала на <Formula math="k" />-й поднесущей. В реализованной
-          системе используется одноотводный ZF-эквализатор.
-        </Para>
-
-        <div className="overflow-x-auto my-5">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-green-700 text-white">
-                <th className="border px-4 py-2">Сценарий</th>
-                <th className="border px-4 py-2">Канал</th>
-                <th className="border px-4 py-2">MIMO</th>
-                <th className="border px-4 py-2">Волновая форма</th>
-                <th className="border px-4 py-2">Эквализатор</th>
-                <th className="border px-4 py-2">Ожидаемый эффект</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ["BPSK AWGN SISO SC", "AWGN", "SISO", "SC", "Нет", "Базовый"],
-                ["QPSK AWGN SISO OFDM-128", "AWGN", "SISO", "OFDM-128", "ZF", "+2× пропускная способность"],
-                ["QPSK Rayleigh 2×2 OFDM-128", "Rayleigh", "2×2", "OFDM-128", "ZF", "Разнесение + OFDM"],
-                ["16-QAM Rayleigh SISO SC", "Rayleigh", "SISO", "SC", "Нет", "Высокая спект. эфф."],
-              ].map((row, i) => (
-                <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  {row.map((cell, j) => (
-                    <td key={j} className="border px-4 py-2">{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="text-sm text-gray-500 mt-1">Таблица 2.3 — Анализируемые сценарии передачи</p>
+        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
+            Рисунок 2.5 — Спектральная эффективность (бит/с/Гц) vs Eb/N0
+          </p>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={seData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }} />
+              <YAxis label={{ value: 'бит/с/Гц', angle: -90, position: 'insideLeft', offset: 10 }} />
+              <Tooltip />
+              <Legend verticalAlign="top" />
+              <Line type="monotone" dataKey="5G NR BG1 QPSK" stroke="#dc2626" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="QC-LDPC BPSK" stroke="#16a34a" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Без кодирования BPSK" stroke="#94a3b8" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-      </Section>
 
-      {/* 2.8 */}
-      <Section title="2.8. Сравнение LDPC с турбо-кодами и полярными кодами" id="ch2-8">
         <Para>
-          Выбор LDPC-кодов для стандарта 5G NR был обусловлен их превосходством над
-          альтернативами при сравнении ряда ключевых критериев. Турбо-коды (применявшиеся
-          в LTE) обеспечивают близкий к LDPC энергетический выигрыш, однако уступают по
-          пропускной способности декодирования из-за последовательной природы алгоритма BCJR.
-          Полярные коды превосходят LDPC при коротких блоках, что определило их выбор для
-          канала управления 5G NR.
+          Сравнение LDPC и Turbo-кодов при схожих параметрах (R = 1/2, блок ~1000 бит) показывает,
+          что LDPC обеспечивает на 0,3–0,5 дБ лучший энергетический выигрыш при длинных блоках
+          (≥ 1000 бит). Преимущество LDPC возрастает с увеличением длины блока: при блоке
+          8192 бит разрыв достигает 0,8–1,0 дБ. Именно по этой причине 3GPP принял решение
+          заменить Turbo-коды на LDPC в канале данных 5G NR, начиная с Release 15 (2018).
         </Para>
 
-        <div className="overflow-x-auto my-5">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-gray-700 text-white">
-                <th className="border px-4 py-2">Критерий</th>
-                <th className="border px-4 py-2">LDPC (5G NR)</th>
-                <th className="border px-4 py-2">Турбо (LTE)</th>
-                <th className="border px-4 py-2">Полярные (5G NR)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ["Алгоритм декодирования", "BP / NMS (параллельный)", "BCJR (последовательный)", "SC / SCL"],
-                ["Производительность декодера", "Очень высокая", "Умеренная", "Высокая"],
-                ["Близость к пределу Шеннона", "Высокая (< 1 дБ)", "Высокая (~1 дБ)", "Оптимальная при N→∞"],
-                ["Оптимальная длина блока", "Длинные (> 1000 бит)", "Средние (100-6000 бит)", "Короткие (< 512 бит)"],
-                ["Применение в 5G NR", "PDSCH, PUSCH", "Не используется", "PDCCH, PUCCH"],
-                ["Параллелизм реализации", "Высокий (QC-структура)", "Низкий", "Умеренный"],
-              ].map((row, i) => (
-                <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="border px-4 py-2 font-medium">{row[0]}</td>
-                  <td className="border px-4 py-2 text-green-700 font-medium">{row[1]}</td>
-                  <td className="border px-4 py-2">{row[2]}</td>
-                  <td className="border px-4 py-2">{row[3]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="text-sm text-gray-500 mt-1">Таблица 2.4 — Сравнение методов помехоустойчивого кодирования</p>
-        </div>
+        <Para>
+          Ключевые преимущества LDPC перед Turbo применительно к 5G NR: более высокая
+          пропускная способность декодера (до 10 Гбит/с против 1–2 Гбит/с у Turbo благодаря
+          параллелизму QC-структуры), лучшая масштабируемость при больших блоках данных,
+          меньший «эффект пола» (error floor) в области высокого SNR.
+        </Para>
       </Section>
-
-      {/* Выводы */}
-      <div className="mt-8 bg-green-900 text-white rounded-lg p-6">
-        <h3 className="font-bold text-lg mb-3">Выводы по главе 2</h3>
-        <ul className="list-disc list-inside space-y-2 text-sm leading-6">
-          <li>Анализ BER-характеристик показывает, что профиль 5G NR BG1 обеспечивает наибольший энергетический выигрыш 5.0 дБ при AWGN и до 6.7 дБ в канале Rayleigh с 16-QAM.</li>
-          <li>«Ватерфольная» форма кривых BER подтверждает эффективность итеративного декодирования: выше порога (~0.8–1.5 дБ) BER снижается на 3–5 порядков за 1–2 дБ прироста SNR.</li>
-          <li>Нормировочный коэффициент NMS α = 0.75 обеспечивает близкий к оптимальному результат при снижении вычислительных затрат по сравнению с полным sum-product.</li>
-          <li>Адаптивная остановка декодирования сокращает среднее число итераций до 2–3 при высоком SNR, уменьшая вычислительную нагрузку на ~94%.</li>
-          <li>OFDM-128 с ZF-эквализацией и режим 2×2 Diversity существенно улучшают характеристики в канале Rayleigh за счёт устранения ISI и пространственного разнесения.</li>
-          <li>Выбор LDPC для канала данных 5G NR обоснован высокой производительностью декодирования (параллелизм QC-структуры) и близостью к пределу Шеннона.</li>
-        </ul>
-      </div>
     </div>
   );
 };

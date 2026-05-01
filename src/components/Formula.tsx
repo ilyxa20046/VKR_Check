@@ -11,12 +11,10 @@ interface FormulaProps {
 export const Formula: React.FC<FormulaProps> = ({ math, block = false, label }) => {
   if (block) {
     return (
-      <div className="my-4 flex items-center justify-center gap-6">
-        <div className="overflow-x-auto">
-          <BlockMath math={math} />
-        </div>
+      <div className="flex items-center justify-center gap-4 my-3 overflow-x-auto">
+        <BlockMath math={math} />
         {label && (
-          <span className="text-gray-500 text-sm whitespace-nowrap">({label})</span>
+          <span className="text-gray-500 text-sm shrink-0">({label})</span>
         )}
       </div>
     );
