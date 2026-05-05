@@ -1,41 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
-body {
-  font-family: 'PT Serif', 'Times New Roman', Georgia, serif;
-  color: #1a1a2e;
-  line-height: 1.7;
-  background-color: #f8f9fc;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply text-slate-800 antialiased;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
 }
 
-.katex {
-  font-size: 1.05em;
-}
-
-.katex-display {
-  overflow-x: auto;
-  padding: 4px 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-table {
-  border-collapse: collapse;
-}
-
-code {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.88em;
-  background: #f1f5f9;
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #0f4c81;
-}
-
-@media print {
-  header { display: none; }
-  body { background: white; font-size: 12pt; }
-  .shadow-md { box-shadow: none; }
+@layer components {
+  .formula-block {
+    @apply my-3 mx-0 bg-slate-50 border-l-4 border-blue-400 px-4 py-2.5 rounded-r-lg font-mono text-sm text-slate-800 overflow-x-auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
 }

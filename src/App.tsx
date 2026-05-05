@@ -1,1100 +1,1012 @@
-import React, { useState } from 'react';
-import Formula from './components/Formula';
-import BerChart from './components/BerChart';
-import ThroughputChart from './components/ThroughputChart';
+import { useState } from "react";
 
-// ── Вспомогательные компоненты оформления ──────────────────────────────────
-
-const H1: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <h1 className="text-3xl font-bold text-gray-900 mb-6 mt-2 text-center leading-tight">
-    {children}
-  </h1>
-);
-
-const H2: React.FC<{ id?: string; children: React.ReactNode }> = ({ id, children }) => (
-  <h2 id={id} className="text-xl font-bold text-gray-800 mb-4 mt-10 pb-2 border-b-2 border-blue-200">
-    {children}
-  </h2>
-);
-
-const H3: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <h3 className="text-lg font-semibold text-gray-800 mb-3 mt-7">
-    {children}
-  </h3>
-);
-
-const P: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <p className={`text-gray-800 leading-relaxed mb-4 text-justify indent-8 ${className}`}>
-    {children}
-  </p>
-);
-
-const Note: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="my-4 pl-4 border-l-4 border-blue-400 bg-blue-50 py-3 pr-4 rounded-r-lg text-sm text-gray-700 leading-relaxed">
-    {children}
-  </div>
-);
-
-const Table: React.FC<{ caption: string; tableNumber: number; children: React.ReactNode }> = ({ caption, tableNumber, children }) => (
-  <div className="my-8 overflow-x-auto">
-    <p className="text-center text-sm font-medium text-gray-700 mb-2">
-      Таблица {tableNumber} — {caption}
-    </p>
-    <table className="w-full border-collapse text-sm text-gray-800 shadow-sm">
-      {children}
-    </table>
-  </div>
-);
-
-const Th: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <th className={`border border-gray-300 bg-gray-100 px-3 py-2 font-semibold text-center text-xs ${className}`}>
-    {children}
-  </th>
-);
-
-const Td: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <td className={`border border-gray-300 px-3 py-2 text-center ${className}`}>
-    {children}
-  </td>
-);
-
-const FormulaBlock: React.FC<{ math: string; number: string }> = ({ math, number }) => (
-  <div className="flex items-center justify-between my-5 px-4">
-    <div className="flex-1 flex justify-center overflow-x-auto">
-      <Formula math={math} block />
-    </div>
-    <span className="text-gray-600 text-sm ml-4 whitespace-nowrap">({number})</span>
-  </div>
-);
-
-// ── Навигация по разделам ───────────────────────────────────────────────────
 const sections = [
-  { id: 'intro', label: '3.1 Описание ПО' },
-  { id: 'ldpc', label: '3.2 LDPC-кодирование' },
-  { id: 'channel', label: '3.3 Модели канала' },
-  { id: 'modulation', label: '3.4 Модуляция' },
-  { id: 'nms', label: '3.5 Алгоритм NMS' },
-  { id: 'metrics', label: '3.6 Метрики' },
-  { id: 'results', label: '3.7 Результаты' },
-  { id: 'conclusions', label: '3.8 Выводы' },
+  { id: "2.1", title: "2.1. Постановка задачи исследования" },
+  { id: "2.2", title: "2.2. Структурная схема исследуемой системы" },
+  { id: "2.3", title: "2.3. Математическое описание модели" },
+  { id: "2.3.1", title: "2.3.1. Формирование двоичной последовательности" },
+  { id: "2.3.2", title: "2.3.2. LDPC-кодирование и профили кодов" },
+  { id: "2.3.3", title: "2.3.3. Модуляция" },
+  { id: "2.3.4", title: "2.3.4. OFDM-waveform и циклический префикс" },
+  { id: "2.3.5", title: "2.3.5. Пространственный режим передачи" },
+  { id: "2.3.6", title: "2.3.6. Модель канала связи" },
+  { id: "2.3.7", title: "2.3.7. Эквализация и soft-демодуляция" },
+  { id: "2.3.8", title: "2.3.8. LDPC-декодирование" },
+  { id: "2.3.9", title: "2.3.9. Дополнительные механизмы модели" },
+  { id: "2.4", title: "2.4. Показатели качества и эффективности" },
+  { id: "2.5", title: "2.5. Алгоритм эксперимента" },
+  { id: "2.6", title: "2.6. Программная реализация" },
+  { id: "2.7", title: "2.7. Выводы по главе 2" },
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Главный компонент
-// ═══════════════════════════════════════════════════════════════════════════
-const App: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+function Formula({ children }: { children: string }) {
+  return (
+    <div className="my-3 mx-0 sm:mx-4 bg-slate-50 border-l-4 border-blue-400 px-4 py-2.5 rounded-r-lg font-mono text-sm text-slate-800 overflow-x-auto whitespace-pre-wrap">
+      {children}
+    </div>
+  );
+}
+
+export default function App() {
+  const [copied, setCopied] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+
+  const handleCopy = () => {
+    const el = document.getElementById("chapter-content");
+    if (!el) return;
+    const text = el.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
 
   const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setActiveSection(id);
+    const el = document.getElementById(`sec-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveSection(id);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-serif">
-      {/* ── Шапка ─────────────────────────────────────────────────────────── */}
-      <header className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <div className="text-xs uppercase tracking-widest text-blue-200 font-sans">ВКР 2026 · LDPC Research Studio</div>
-            <div className="font-bold text-lg">Глава 3. Экспериментальное исследование и моделирование</div>
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex flex-col w-72 xl:w-80 shrink-0 bg-white border-r border-slate-200 sticky top-0 h-screen overflow-y-auto">
+        <div className="p-5 border-b border-slate-200">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xl">📡</span>
+            <span className="font-bold text-slate-800 text-sm leading-tight">LDPC Research Studio</span>
           </div>
-          <nav className="flex flex-wrap gap-1">
-            {sections.map(s => (
+          <p className="text-xs text-slate-500 mt-1">ВКР 2026 — Материалы диплома</p>
+        </div>
+        <div className="p-4 flex-1 overflow-y-auto">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Содержание главы 2</p>
+          <nav className="space-y-1">
+            {sections.map((s) => (
               <button
                 key={s.id}
                 onClick={() => scrollTo(s.id)}
-                className={`text-xs px-3 py-1 rounded-full font-sans transition-all ${
+                className={`w-full text-left px-3 py-2 rounded-lg transition-all duration-150 ${
                   activeSection === s.id
-                    ? 'bg-white text-blue-900 font-bold'
-                    : 'bg-blue-700 hover:bg-blue-600 text-blue-100'
-                }`}
+                    ? "bg-blue-50 text-blue-700 font-medium"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                } ${s.id.split(".").length > 2 ? "pl-6 text-xs" : "text-sm"}`}
               >
-                {s.label}
+                {s.title}
               </button>
             ))}
           </nav>
         </div>
-      </header>
-
-      {/* ── Основной контент ──────────────────────────────────────────────── */}
-      <main className="max-w-4xl mx-auto px-6 py-10">
-        <H1>
-          ГЛАВА 3. ЭКСПЕРИМЕНТАЛЬНОЕ ИССЛЕДОВАНИЕ И МОДЕЛИРОВАНИЕ СИСТЕМЫ
-          ПОМЕХОУСТОЙЧИВОГО КОДИРОВАНИЯ В ЗАШУМЛЁННОМ КАНАЛЕ МОБИЛЬНОЙ СЕТИ 5G
-        </H1>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="intro">
-          <H2 id="intro">3.1 Описание разработанного программного обеспечения</H2>
-
-          <P>
-            В рамках выпускной квалификационной работы было разработано мультиплатформенное
-            desktop-приложение <strong>LDPC Research Studio v1.0.0</strong>, реализующее полный
-            стек физического уровня (PHY) системы мобильной связи стандарта 5G New Radio (NR).
-            Приложение написано на языке Java&nbsp;17 с использованием библиотеки JavaFX&nbsp;17.0.10
-            для графического интерфейса и библиотеки Apache Commons Math&nbsp;3.6.1 для
-            вычислений специальных функций.
-          </P>
-
-          <P>
-            Архитектура приложения построена по паттерну MVC (Model-View-Controller).
-            Ключевые пакеты: <code>service/phy/codec</code> — реализация LDPC-кодека;
-            <code>service/phy/channel</code> — модели канала; <code>service/phy/modulation</code>
-            — схемы модуляции; <code>service/phy/metrics</code> — расчёт показателей качества;
-            <code>service/phy/runner</code> — оркестратор эксперимента.
-          </P>
-
-          <P>
-            Приложение поддерживает следующие режимы работы: одиночное моделирование (вкладка
-            «Моделирование»), просмотр и экспорт результатов (вкладка «Результаты»),
-            сравнительный анализ двух сценариев (вкладка «Сравнение»), пакетный анализ
-            нескольких сценариев одновременно (вкладка «Пакетный анализ»). Экспорт результатов
-            доступен в форматах CSV, PNG, TXT, HTML, а также в виде комплекта материалов для
-            защиты ВКР.
-          </P>
-
-          <Table caption="Технологический стек приложения LDPC Research Studio" tableNumber={3.1}>
-            <thead>
-              <tr>
-                <Th>Компонент</Th>
-                <Th>Версия / значение</Th>
-                <Th>Назначение</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['Java', '17 LTS', 'Основной язык разработки'],
-                ['JavaFX', '17.0.10', 'Кроссплатформенный GUI'],
-                ['Maven', '3.8+', 'Система сборки'],
-                ['Apache Commons Math', '3.6.1', 'Erf, специальные функции'],
-                ['Целевые ОС', 'Windows, Linux, RED OS', 'Мультиплатформенность'],
-                ['Алгоритм декодирования', 'Normalized Min-Sum', 'BP-декодирование LDPC'],
-                ['Модели канала', 'AWGN, Rayleigh fading', 'Физический уровень'],
-                ['Схемы модуляции', 'BPSK, QPSK, 16-QAM, 64-QAM, 256-QAM', 'Цифровая модуляция'],
-              ].map(([comp, ver, desc], i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <Td className="font-medium text-left">{comp}</Td>
-                  <Td>{ver}</Td>
-                  <Td className="text-left">{desc}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="ldpc">
-          <H2 id="ldpc">3.2 Реализация LDPC-кодирования в стандарте 5G NR</H2>
-
-          <H3>3.2.1 Структура проверочной матрицы</H3>
-
-          <P>
-            Код LDPC (Low-Density Parity-Check) определяется разреженной проверочной матрицей
-            {' '}<Formula math="H" /> размером <Formula math="m \times n" />, где
-            {' '}<Formula math="m" /> — число проверочных уравнений, <Formula math="n" /> — длина
-            кодового слова. Информационная длина равна <Formula math="k = n - m" />, скорость
-            кодирования — <Formula math="R = k / n" />.
-          </P>
-
-          <P>
-            В стандарте 3GPP 5G NR (TS 38.212) используются квазициклические (QC) LDPC-коды,
-            построенные на базе двух базовых графов: Base Graph 1 (BG1) для блоков
-            <Formula math="k \geq 500" /> бит и Base Graph 2 (BG2) для коротких блоков.
-            В приложении реализованы оба варианта. Матрица <Formula math="H" /> формируется
-            из сдвиговых матриц размером <Formula math="Z \times Z" /> (лифтинговый размер):
-          </P>
-
-          <FormulaBlock
-            math="H = \begin{bmatrix} H_{A} & H_{B} \end{bmatrix}, \quad H_{A} \in \mathbb{F}_2^{m \times k},\; H_{B} \in \mathbb{F}_2^{m \times m}"
-            number="3.1"
-          />
-
-          <P>
-            Каждый блок матрицы <Formula math="H" /> задаётся циклическим сдвигом
-            <Formula math="p_{i,j}" /> из файла базового графа <code>NR_1_0_8.txt</code>.
-            Расширение квазициклической структуры реализовано методом <code>expandQcToH</code>
-            класса <code>LdpcCodec</code>:
-          </P>
-
-          <FormulaBlock
-            math="\mathbf{H}_{ij} = P^{p_{ij}} \in \mathbb{F}_2^{Z \times Z}, \quad P = \text{циклический сдвиг на 1 позицию}"
-            number="3.2"
-          />
-
-          <H3>3.2.2 Кодирование</H3>
-
-          <P>
-            Процедура кодирования вычисляет вектор проверочных бит
-            {' '}<Formula math="\mathbf{p} \in \mathbb{F}_2^m" /> по вектору
-            информационных бит <Formula math="\mathbf{u} \in \mathbb{F}_2^k" />.
-            Применяется метод систематического кодирования через предвычисленную
-            преобразующую матрицу <Formula math="T = B^{-1} A \in \mathbb{F}_2^{m \times k}" />,
-            где <Formula math="B = H_B" /> инвертируется методом Гаусса над
-            {' '}<Formula math="\mathbb{F}_2" />:
-          </P>
-
-          <FormulaBlock
-            math="\mathbf{p} = T \cdot \mathbf{u} \pmod{2}, \quad T = B^{-1} A"
-            number="3.3"
-          />
-
-          <P>
-            Кодовое слово: <Formula math="\mathbf{c} = [\mathbf{u} \;\|\; \mathbf{p}] \in \mathbb{F}_2^n" />.
-            Результат удовлетворяет проверочному уравнению{' '}
-            <Formula math="H \cdot \mathbf{c}^T = \mathbf{0} \pmod{2}" />.
-          </P>
-
-          <H3>3.2.3 Реализованные профили LDPC</H3>
-
-          <Table caption="Параметры LDPC-профилей, реализованных в LDPC Research Studio" tableNumber={3.2}>
-            <thead>
-              <tr>
-                <Th>Профиль</Th>
-                <Th>n (биты)</Th>
-                <Th>k (биты)</Th>
-                <Th>R</Th>
-                <Th>Z</Th>
-                <Th>Алгоритм</Th>
-                <Th>Применение</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['Учебный LDPC', '24', '12', '1/2', '—', 'Min-Sum', 'Учебная калибровка'],
-                ['QC-inspired', '96', '48', '1/2', '—', 'NMS', 'Приближение к 5G'],
-                ['5G NR BG1', '528', '176', '≈1/3', '8', 'NMS', 'Производственный 5G NR'],
-                ['Turbo LTE', 'var', 'var', '1/3', '—', 'BCJR', 'Сравнение с LTE'],
-                ['Polar', '128', '64', '1/2', '—', 'Sum-Product', 'Сравнение с 5G NR'],
-              ].map(([prof, n, k, R, Z, alg, app], i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <Td className="font-medium text-left">{prof}</Td>
-                  <Td>{n}</Td>
-                  <Td>{k}</Td>
-                  <Td>{R}</Td>
-                  <Td>{Z}</Td>
-                  <Td>{alg}</Td>
-                  <Td className="text-left text-xs">{app}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="channel">
-          <H2 id="channel">3.3 Модели зашумлённого канала мобильной сети</H2>
-
-          <H3>3.3.1 Канал AWGN</H3>
-
-          <P>
-            Модель AWGN (Additive White Gaussian Noise) описывает идеальный канал, в котором
-            принятый сигнал представляет собой сумму переданного сигнала и белого гауссовского
-            шума с нулевым математическим ожиданием. Принятый символ:
-          </P>
-
-          <FormulaBlock
-            math="y = x + n, \quad n \sim \mathcal{N}(0,\, \sigma^2)"
-            number="3.4"
-          />
-
-          <P>
-            Дисперсия шума <Formula math="\sigma^2" /> связана с отношением
-            сигнал/шум на бит <Formula math="E_b/N_0" /> через:
-          </P>
-
-          <FormulaBlock
-            math="\sigma^2 = \frac{N_0}{2} = \frac{1}{2 \cdot m \cdot R \cdot (E_b / N_0)}"
-            number="3.5"
-          />
-
-          <P>
-            где <Formula math="m" /> — число бит на символ, <Formula math="R" /> — кодовая
-            скорость. В классе <code>PhyMetricsEngine</code> это реализовано методом
-            {' '}<code>sigmaFromEbN0</code>.
-          </P>
-
-          <H3>3.3.2 Модель замирания Рэлея</H3>
-
-          <P>
-            Канал с замираниями Рэлея (Rayleigh fading) моделирует реальные условия мобильной
-            связи с многолучевым распространением. Комплексный коэффициент усиления канала
-            <Formula math="h" /> является случайной комплексной гауссовской переменной:
-          </P>
-
-          <FormulaBlock
-            math="h = h_I + j\,h_Q, \quad h_I,\, h_Q \sim \mathcal{N}\!\left(0,\, \frac{1}{2}\right)"
-            number="3.6"
-          />
-
-          <P>
-            Амплитуда <Formula math="|h|" /> подчиняется распределению Рэлея
-            с параметром <Formula math="\Omega = \mathbb{E}[|h|^2] = 1" />.
-            Принятый сигнал с замираниями:
-          </P>
-
-          <FormulaBlock
-            math="y = h \cdot x + n, \quad n \sim \mathcal{CN}(0,\, 2\sigma^2)"
-            number="3.7"
-          />
-
-          <P>
-            В реализации метод <code>rayleigh(Random random)</code> класса
-            {' '}<code>ChannelEngine</code> генерирует <Formula math="h" /> как:
-          </P>
-
-          <FormulaBlock
-            math="h = \frac{1}{\sqrt{2}}\, \xi_I + j\, \frac{1}{\sqrt{2}}\, \xi_Q, \quad \xi_I, \xi_Q \sim \mathcal{N}(0,1)"
-            number="3.8"
-          />
-
-          <H3>3.3.3 Модель OFDM-канала</H3>
-
-          <P>
-            Для многонесущей модуляции OFDM (Orthogonal Frequency Division Multiplexing) модель
-            канала строится на базе многолучевой импульсной характеристики. В приложении
-            реализованы конфигурации OFDM-64 (64 поднесущие) и OFDM-128 (128 поднесущих).
-            Усиление на каждой поднесущей формируется суммой <Formula math="L" /> многолучевых
-            отводов:
-          </P>
-
-          <FormulaBlock
-            math="H_k = \sum_{l=0}^{L-1} h_l \cdot e^{-j 2\pi k l / N_{FFT}}, \quad w_l = \frac{1}{\sqrt{l+1}}"
-            number="3.9"
-          />
-
-          <P>
-            Циклический префикс (CP) длиной <Formula math="N_{CP}" /> устраняет межсимвольные
-            помехи. Полезная доля от OFDM-символа:
-          </P>
-
-          <FormulaBlock
-            math="\eta_{CP} = \frac{N_{FFT}}{N_{FFT} + N_{CP}}"
-            number="3.10"
-          />
-
-          <P>
-            Для выравнивания сигнала после OFDM-демодуляции применяется
-            одноотводный ZF-эквалайзер (Zero-Forcing):
-          </P>
-
-          <FormulaBlock
-            math="\hat{y}_k = \frac{y_k}{H_k} = x_k + \frac{n_k}{H_k}"
-            number="3.11"
-          />
-
-          <Table caption="Параметры моделей канала в LDPC Research Studio" tableNumber={3.3}>
-            <thead>
-              <tr>
-                <Th>Модель</Th>
-                <Th>Коэффициент h</Th>
-                <Th>Span замираний</Th>
-                <Th>Число отводов L</Th>
-                <Th>Эквалайзер</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['AWGN', '1 + j·0', '∞', '1', 'Не нужен'],
-                ['Rayleigh (SC)', 'Рэлей (блок)', '12 символов', '1', 'One-tap ZF'],
-                ['Rayleigh + OFDM-64', 'Per-subcarrier', '1', '3', 'One-tap ZF'],
-                ['Rayleigh + OFDM-128', 'Per-subcarrier', '1', '4', 'One-tap ZF'],
-                ['AWGN + OFDM-64', 'H_k ≈ 1', '∞', '—', 'Опционально'],
-              ].map(([model, h, span, L, eq], i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <Td className="font-medium text-left">{model}</Td>
-                  <Td><code className="text-xs">{h}</code></Td>
-                  <Td>{span}</Td>
-                  <Td>{L}</Td>
-                  <Td>{eq}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="modulation">
-          <H2 id="modulation">3.4 Реализация схем цифровой модуляции</H2>
-
-          <H3>3.4.1 BPSK и QPSK</H3>
-
-          <P>
-            Модуляция BPSK (Binary Phase-Shift Keying) отображает один бит на символ созвездия:
-            {' '}<Formula math="s \in \{+1,\, -1\}" />. Теоретическое значение BER в канале AWGN:
-          </P>
-
-          <FormulaBlock
-            math="\text{BER}_{\text{BPSK}} = Q\!\left(\sqrt{2\,E_b/N_0}\right) = \frac{1}{2}\,\mathrm{erfc}\!\left(\sqrt{E_b/N_0}\right)"
-            number="3.12"
-          />
-
-          <P>
-            Модуляция QPSK (Quadrature Phase-Shift Keying) отображает 2 бита на символ,
-            обеспечивая ту же помехоустойчивость, что и BPSK (на бит), при вдвое большей
-            спектральной эффективности. Точки созвездия QPSK с кодом Грея:
-            {' '}<Formula math="\{ (\pm\frac{1}{\sqrt{2}},\, \pm\frac{1}{\sqrt{2}}) \}" />.
-          </P>
-
-          <H3>3.4.2 Квадратурная амплитудная модуляция 16-QAM</H3>
-
-          <P>
-            Модуляция 16-QAM отображает 4 бита на один символ. Точки созвездия
-            нормированы так, чтобы средняя мощность символа равнялась 1:
-          </P>
-
-          <FormulaBlock
-            math="E_s = \frac{1}{M}\sum_{i=1}^{M}|s_i|^2 = 1, \quad \sigma_{\text{norm}} = \sqrt{\frac{2}{3}(M-1)},\; M=16"
-            number="3.13"
-          />
-
-          <P>
-            Теоретическое BER для M-QAM с кодом Грея (Gray mapping):
-          </P>
-
-          <FormulaBlock
-            math="\text{BER}_{M\text{-QAM}} = \frac{4}{k}\left(1 - \frac{1}{\sqrt{M}}\right) Q\!\left(\sqrt{\frac{3k}{M-1}\cdot\frac{E_b}{N_0}}\right), \quad k = \log_2 M"
-            number="3.14"
-          />
-
-          <H3>3.4.3 Демодуляция и вычисление LLR</H3>
-
-          <P>
-            После прохождения через канал производится вычисление логарифмических
-            отношений правдоподобия (LLR) для каждого бита. Метрика расстояния
-            вычисляется для каждой точки созвездия и ветки приёмника:
-          </P>
-
-          <FormulaBlock
-            math="\text{LLR}_i = \frac{\min_{s:\, b_i=1} \|y - h \cdot s\|^2 - \min_{s:\, b_i=0} \|y - h \cdot s\|^2}{\sigma_n^2}"
-            number="3.15"
-          />
-
-          <P>
-            В реализации метод <code>demapToLlr</code> класса <code>ChannelEngine</code>
-            вычисляет LLR для каждого бита через перебор всех точек созвездия с учётом
-            числа ветвей (SISO или 2×2 Diversity), применяя при необходимости ZF-выравнивание.
-          </P>
-
-          <Table caption="Параметры схем модуляции" tableNumber={3.4}>
-            <thead>
-              <tr>
-                <Th>Модуляция</Th>
-                <Th>M (точек)</Th>
-                <Th>бит/символ (k)</Th>
-                <Th>Нормировка σ</Th>
-                <Th>BER≈10⁻³ (Eb/N0)</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['BPSK', '2', '1', '1.000', '6.8 дБ'],
-                ['QPSK', '4', '2', '0.707', '6.8 дБ'],
-                ['16-QAM', '16', '4', '√(1/10)', '10.5 дБ'],
-                ['64-QAM', '64', '6', '√(1/42)', '14.5 дБ'],
-                ['256-QAM', '256', '8', '√(1/170)', '18.5 дБ'],
-              ].map(([mod, M, k, norm, snr], i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <Td className="font-medium">{mod}</Td>
-                  <Td>{M}</Td>
-                  <Td>{k}</Td>
-                  <Td><code className="text-xs">{norm}</code></Td>
-                  <Td>{snr}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="nms">
-          <H2 id="nms">3.5 Алгоритм декодирования Normalized Min-Sum</H2>
-
-          <H3>3.5.1 Граф Таннера и передача сообщений</H3>
-
-          <P>
-            Декодирование LDPC выполняется итеративным алгоритмом передачи
-            доверительных сообщений (Belief Propagation, BP) на двудольном графе Таннера.
-            Граф состоит из <Formula math="n" /> переменных узлов
-            (variable nodes) и <Formula math="m" /> проверочных узлов (check nodes),
-            соединённых рёбрами согласно ненулевым элементам матрицы <Formula math="H" />.
-          </P>
-
-          <P>
-            На каждой итерации выполняются два шага: обновление сообщений от проверочных
-            узлов к переменным (C→V) и от переменных к проверочным (V→C).
-          </P>
-
-          <H3>3.5.2 Шаг C→V: Normalized Min-Sum</H3>
-
-          <P>
-            Точный алгоритм Sum-Product требует вычисления функции
-            <Formula math="\phi(x) = -\ln\tanh(|x|/2)" />, что дорого
-            в вычислительном отношении. Алгоритм Min-Sum аппроксимирует его:
-          </P>
-
-          <FormulaBlock
-            math="r_{c \to v}^{(t)} = \prod_{v' \in \mathcal{N}(c) \setminus v} \mathrm{sign}(q_{v' \to c}^{(t)}) \cdot \min_{v' \in \mathcal{N}(c) \setminus v} |q_{v' \to c}^{(t)}|"
-            number="3.16"
-          />
-
-          <P>
-            Normalized Min-Sum вводит масштабирующий коэффициент
-            <Formula math="\alpha \in (0.5,\, 1.0]" />, компенсирующий систематическое
-            завышение оценки Min-Sum:
-          </P>
-
-          <FormulaBlock
-            math="r_{c \to v}^{(t)} = \alpha \cdot \prod_{v' \in \mathcal{N}(c) \setminus v} \mathrm{sign}(q_{v' \to c}^{(t)}) \cdot \min_{v' \in \mathcal{N}(c) \setminus v} \left|q_{v' \to c}^{(t)}\right|"
-            number="3.17"
-          />
-
-          <P>
-            В реализации класс <code>LdpcCodec</code>, метод <code>decodeNmsWithStats</code>,
-            использует нормировку <Formula math="\alpha = \mathrm{clamp}(0.5,\, 1.0,\, \alpha_{\text{cfg}})" />.
-            Рекомендуемое значение по умолчанию: <Formula math="\alpha = 0.80" />.
-          </P>
-
-          <H3>3.5.3 Шаг V→C: обновление переменных узлов</H3>
-
-          <P>
-            Суммарное доверительное сообщение переменного узла <Formula math="v" />:
-          </P>
-
-          <FormulaBlock
-            math="Q_v^{(t)} = \lambda_v + \sum_{c \in \mathcal{N}(v)} r_{c \to v}^{(t)}"
-            number="3.18"
-          />
-
-          <P>
-            где <Formula math="\lambda_v" /> — канальный LLR. Исходящее сообщение к проверочному
-            узлу <Formula math="c" />:
-          </P>
-
-          <FormulaBlock
-            math="q_{v \to c}^{(t+1)} = Q_v^{(t)} - r_{c \to v}^{(t)}"
-            number="3.19"
-          />
-
-          <H3>3.5.4 Критерий останова и жёсткое решение</H3>
-
-          <P>
-            На каждой итерации производится жёсткое решение:
-            {' '}<Formula math="\hat{c}_v = \mathbf{1}[Q_v^{(t)} < 0]" />.
-            Декодирование останавливается при выполнении проверочных уравнений
-            (синдром нулевой) или по достижении максимального числа итераций:
-          </P>
-
-          <FormulaBlock
-            math="\mathbf{s} = H \cdot \hat{\mathbf{c}}^T \!\pmod{2} = \mathbf{0} \implies \text{успех}"
-            number="3.20"
-          />
-
-          <Note>
-            <strong>Замечание:</strong> В реализации LDPC Research Studio метод <code>isSyndromeZero</code>
-            проверяет синдром за <Formula math="O(m \cdot d_c)" /> операций, где <Formula math="d_c" /> — 
-            средняя степень проверочного узла. Для 5G NR BG1 с Z=8 это 
-            <Formula math="m = 46 \times 8 = 368" /> строк.
-          </Note>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="metrics">
-          <H2 id="metrics">3.6 Методика расчёта показателей качества передачи</H2>
-
-          <H3>3.6.1 Вероятность ошибки на бит (BER)</H3>
-
-          <P>
-            Вероятность ошибки на бит (Bit Error Rate) вычисляется как отношение числа
-            ошибочно принятых бит к общему числу переданных информационных бит:
-          </P>
-
-          <FormulaBlock
-            math="\text{BER} = \frac{N_{\text{err}}}{N_{\text{total}}} = \frac{\sum_{b=1}^{B} \sum_{i=1}^{k} \hat{c}_i^{(b)} \oplus c_i^{(b)}}{B \cdot k}"
-            number="3.21"
-          />
-
-          <P>
-            где <Formula math="B" /> — число смоделированных блоков, <Formula math="k" /> — число
-            информационных бит в блоке, <Formula math="c_i^{(b)}" /> и <Formula math="\hat{c}_i^{(b)}" /> —
-            переданный и декодированный биты соответственно.
-          </P>
-
-          <H3>3.6.2 Вероятность ошибки на блок (BLER)</H3>
-
-          <FormulaBlock
-            math="\text{BLER} = \frac{N_{\text{block err}}}{B}"
-            number="3.22"
-          />
-
-          <P>
-            В приложении поддерживаются два критерия определения ошибки блока:
-            несовпадение бит (<em>Bit mismatch</em>) и отказ CRC (<em>CRC fail</em>).
-            При включённом CRC-16 добавляются 16 бит контрольной суммы к транспортному блоку,
-            и ошибка блока фиксируется при ненулевом остатке CRC.
-          </P>
-
-          <H3>3.6.3 Энергетический выигрыш кодирования</H3>
-
-          <P>
-            Энергетический выигрыш (Coding Gain) оценивает, насколько меньший Eb/N0
-            требуется кодированной системе по сравнению с некодированной для достижения
-            целевого значения BER (обычно <Formula math="\text{BER}_0 = 10^{-3}" />):
-          </P>
-
-          <FormulaBlock
-            math="\Delta_{\text{CG}} = \left(\frac{E_b}{N_0}\right)_{\text{uncoded}}\!\!\!\Big|_{\text{BER}_0} - \left(\frac{E_b}{N_0}\right)_{\text{coded}}\!\!\!\Big|_{\text{BER}_0}, \quad [\text{дБ}]"
-            number="3.23"
-          />
-
-          <H3>3.6.4 Эффективная пропускная способность</H3>
-
-          <P>
-            Эффективная пропускная способность (Effective Throughput) с учётом BLER:
-          </P>
-
-          <FormulaBlock
-            math="T_{\text{eff}} = R_s \cdot m \cdot R_c \cdot \eta_{CP} \cdot (1 - \text{BLER}), \quad [\text{Мбит/с}]"
-            number="3.24"
-          />
-
-          <P>
-            где <Formula math="R_s = 20" /> Мбод — символьная скорость,
-            <Formula math="m" /> — бит/символ, <Formula math="R_c" /> — кодовая скорость,
-            <Formula math="\eta_{CP}" /> — коэффициент эффективности CP (1 для SC,
-            <Formula math="\leq 1" /> для OFDM).
-          </P>
-
-          <H3>3.6.5 Спектральная эффективность</H3>
-
-          <FormulaBlock
-            math="\eta = m \cdot R_c \cdot \eta_{CP} \cdot (1 - \text{BLER}), \quad [\text{бит/с/Гц}]"
-            number="3.25"
-          />
-
-          <H3>3.6.6 Доверительный интервал (интервал Уилсона)</H3>
-
-          <P>
-            Для статистической оценки точности измерений BER и BLER используется интервал
-            Уилсона, который является предпочтительным для оценки долей при малом числе
-            успехов. При доверительном уровне <Formula math="1 - \delta = 0.95" />,
-            <Formula math="z = z_{1-\delta/2} = 1.96" />:
-          </P>
-
-          <FormulaBlock
-            math="\hat{p}_{\pm} = \frac{\hat{p} + \frac{z^2}{2N} \pm z\sqrt{\frac{\hat{p}(1-\hat{p})}{N} + \frac{z^2}{4N^2}}}{1 + \frac{z^2}{N}}, \quad \hat{p} = \frac{N_{\text{err}}}{N}"
-            number="3.26"
-          />
-
-          <Table caption="Рассчитываемые метрики в LDPC Research Studio" tableNumber={3.5}>
-            <thead>
-              <tr>
-                <Th>Метрика</Th>
-                <Th>Обозначение</Th>
-                <Th>Формула / источник</Th>
-                <Th>Единица</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['BER', 'pe', '(3.21)', 'безразм.'],
-                ['BLER', 'Pblock', '(3.22)', 'безразм.'],
-                ['Coding Gain', 'ΔCG', '(3.23)', 'дБ'],
-                ['Пропускная способность', 'Teff', '(3.24)', 'Мбит/с'],
-                ['Спект. эффективность', 'η', '(3.25)', 'бит/с/Гц'],
-                ['95% ДИ BER/BLER', 'p±', '(3.26)', 'безразм.'],
-                ['Среднее итераций', '<I>', 'по блокам', 'шт.'],
-                ['Сходимость', 'Pconv', 'доля блоков', '%'],
-              ].map(([name, sym, form, unit], i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <Td className="font-medium text-left">{name}</Td>
-                  <Td><code className="text-xs">{sym}</code></Td>
-                  <Td>{form}</Td>
-                  <Td>{unit}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="results">
-          <H2 id="results">3.7 Результаты моделирования и их анализ</H2>
-
-          <P>
-            Моделирование выполнялось в приложении LDPC Research Studio для шести ключевых
-            сценариев, соответствующих рекомендованным профилям защиты ВКР. Параметры
-            опорного сценария: QPSK, канал AWGN, 5G NR BG1 (Z=8), OFDM-64, CP=8,
-            ZF-эквалайзер, CRC-16, сегментация, rate matching (target 384 бит),
-            критерий BLER — отказ CRC, алгоритм NMS с <Formula math="\alpha = 0.80" />,
-            диапазон Eb/N0 от 0 до 12 дБ с шагом 1 дБ, до 2500 блоков на точку.
-          </P>
-
-          <H3>3.7.1 Зависимость BER от Eb/N0: сравнение LDPC-профилей (AWGN)</H3>
-
-          <P>
-            На рисунке&nbsp;3.1 представлены кривые BER(Eb/N0) для трёх реализованных
-            профилей LDPC в канале AWGN с модуляцией BPSK в сравнении с некодированной
-            передачей. Все кривые демонстрируют характерный «водопад» — резкое снижение
-            BER при превышении порога ОСШ.
-          </P>
-
-          <BerChart
-            chartType="awgn_comparison"
-            title="Зависимость BER(Eb/N0) для различных профилей LDPC, канал AWGN, BPSK"
-            figureNumber={3.1}
-          />
-
-          <P>
-            Учебный профиль LDPC (24,12) обеспечивает энергетический выигрыш около 2.8 дБ
-            при BER = 10⁻³. QC-inspired LDPC (96,48) при той же скорости кодирования
-            достигает выигрыша ~4.1 дБ за счёт большей длины блока. Профиль 5G NR BG1 (Z=8)
-            обеспечивает наибольший выигрыш ~5.8 дБ, что объясняется структурой базового
-            графа, оптимизированной по стандарту 3GPP TS 38.212.
-          </P>
-
-          <H3>3.7.2 Сравнение канала AWGN и замирания Рэлея</H3>
-
-          <P>
-            Рисунок 3.2 демонстрирует влияние замирания Рэлея на характеристики системы.
-            В канале Рэлея без кодирования BER убывает значительно медленнее — пропорционально
-            <Formula math="\frac{1}{2\gamma}" /> при больших ОСШ <Formula math="\gamma" />,
-            а не экспоненциально как в AWGN. Применение LDPC-кодирования существенно
-            улучшает ситуацию за счёт исправления пакетных ошибок, вызванных глубокими
-            замираниями.
-          </P>
-
-          <BerChart
-            chartType="rayleigh_comparison"
-            title="Сравнение BER в каналах AWGN и Rayleigh fading, 5G NR BG1 LDPC"
-            figureNumber={3.2}
-          />
-
-          <P>
-            Теоретический BER для некодированного BPSK в канале Рэлея:
-          </P>
-
-          <FormulaBlock
-            math="\text{BER}_{\text{Rayleigh}} = \frac{1}{2}\left(1 - \sqrt{\frac{\bar{\gamma}}{1 + \bar{\gamma}}}\right), \quad \bar{\gamma} = \frac{E_b}{N_0}"
-            number="3.27"
-          />
-
-          <P>
-            При Eb/N0 = 10 дБ в канале Рэлея без кодирования BER ≈ 4×10⁻². После применения
-            5G NR LDPC BER снижается до уровня ~10⁻⁵, что соответствует энергетическому
-            выигрышу порядка 7.3 дБ.
-          </P>
-
-          <H3>3.7.3 Влияние схемы модуляции на BER</H3>
-
-          <P>
-            На рисунке 3.3 приведены зависимости BER(Eb/N0) для трёх схем модуляции
-            (BPSK, QPSK, 16-QAM) как без кодирования, так и с кодированием 5G NR LDPC.
-            Пунктирные линии — некодированные системы, сплошные — с LDPC.
-          </P>
-
-          <BerChart
-            chartType="modulation_comparison"
-            title="Зависимость BER(Eb/N0) для разных схем модуляции с LDPC и без, канал AWGN"
-            figureNumber={3.3}
-          />
-
-          <P>
-            Переход от BPSK к QPSK не изменяет BER на бит в канале AWGN, но удваивает
-            спектральную эффективность. Модуляция 16-QAM требует примерно на 4 дБ большего
-            Eb/N0 для достижения того же BER, однако обеспечивает вчетверо большую пропускную
-            способность по сравнению с BPSK. Применение LDPC-кодирования существенно
-            снижает требования к Eb/N0 для всех схем модуляции.
-          </P>
-
-          <H3>3.7.4 Зависимость BLER(Eb/N0) для разных профилей</H3>
-
-          <P>
-            Рисунок 3.4 отображает кривые BLER для трёх профилей LDPC. Критерием ошибки
-            блока служит проверка CRC-16 (для профилей с включённым CRC) или несовпадение
-            бит (учебный профиль).
-          </P>
-
-          <BerChart
-            chartType="ldpc_profiles"
-            title="Зависимость BLER(Eb/N0) для трёх LDPC-профилей, канал AWGN"
-            figureNumber={3.4}
-          />
-
-          <P>
-            Профиль 5G NR BG1 обеспечивает более крутой спад BLER («водопад»), что
-            характерно для длинных кодов с хорошей минимальной кодовым расстоянием.
-            Порог «водопада» определяется как Eb/N0, при котором BLER снижается от 1.0
-            до 0.5. Для 5G NR BG1 (Z=8) этот порог составляет ~4 дБ в канале AWGN.
-          </P>
-
-          <H3>3.7.5 Пропускная способность в зависимости от Eb/N0</H3>
-
-          <P>
-            Рисунок 3.5 показывает зависимость эффективной пропускной способности от Eb/N0
-            для трёх схем модуляции с 5G NR LDPC. При увеличении Eb/N0 BLER снижается,
-            и пропускная способность стремится к теоретическому максимуму
-            <Formula math="T_{\max} = R_s \cdot m \cdot R_c" />.
-          </P>
-
-          <ThroughputChart
-            chartType="throughput"
-            title="Эффективная пропускная способность vs Eb/N0 для различных схем модуляции"
-            figureNumber={3.5}
-          />
-
-          <P>
-            Максимальная пропускная способность при 16-QAM + LDPC (R≈1/3) составляет
-            ~26.7 Мбит/с при символьной скорости 20 Мбод. Для QPSK + LDPC максимум равен
-            ~13.3 Мбит/с. При этом 16-QAM достигает насыщения при более высоком Eb/N0
-            (~10–11 дБ), тогда как QPSK насыщается уже при 5–6 дБ.
-          </P>
-
-          <H3>3.7.6 Сходимость декодера и среднее число итераций</H3>
-
-          <P>
-            Рисунок 3.6 демонстрирует зависимость среднего числа итераций декодера
-            Normalized Min-Sum и доли сходящихся блоков от Eb/N0 для профиля 5G NR BG1
-            (максимум 18 итераций, <Formula math="\alpha = 0.80" />).
-          </P>
-
-          <ThroughputChart
-            chartType="iterations"
-            title="Сходимость декодера NMS: среднее число итераций и доля успешных блоков"
-            figureNumber={3.6}
-          />
-
-          <P>
-            При низких значениях ОСШ (Eb/N0 &lt; 3 дБ) декодер исчерпывает лимит итераций
-            практически для каждого блока. При Eb/N0 ≈ 5–6 дБ наблюдается переходная
-            область, в которой среднее число итераций резко снижается с ~12 до ~4.
-            При Eb/N0 &gt; 10 дБ декодер сходится в среднем за 2–3 итерации, что
-            подтверждает высокую вычислительную эффективность алгоритма NMS в зоне
-            нормальной работы.
-          </P>
-
-          <H3>3.7.7 Спектральная эффективность различных конфигураций</H3>
-
-          <ThroughputChart
-            chartType="spectral"
-            title="Спектральная эффективность для различных конфигураций модуляции и MIMO"
-            figureNumber={3.7}
-          />
-
-          <P>
-            Конфигурация 256-QAM + 2×2 MIMO обеспечивает наибольшую спектральную
-            эффективность ~3.21 бит/с/Гц, однако требует наибольшего ОСШ (~20 дБ для
-            обеспечения BLER &lt; 10%). Для типичных условий городской мобильной связи
-            с Eb/N0 в диапазоне 6–12 дБ наиболее рационально применение QPSK или
-            16-QAM в режиме OFDM-64.
-          </P>
-
-          <H3>3.7.8 Энергетический выигрыш кодирования</H3>
-
-          <ThroughputChart
-            chartType="coding_gain"
-            title="Энергетический выигрыш различных конфигураций LDPC при BER = 10⁻³"
-            figureNumber={3.8}
-          />
-
-          <P>
-            Сводные результаты моделирования по всем сценариям приведены в таблице 3.6.
-          </P>
-
-          <Table caption="Сводные результаты моделирования" tableNumber={3.6}>
-            <thead>
-              <tr>
-                <Th>Сценарий</Th>
-                <Th>Канал</Th>
-                <Th>Модуляция</Th>
-                <Th>LDPC</Th>
-                <Th>BER при 6 дБ</Th>
-                <Th>Eb/N0 при BER=10⁻³</Th>
-                <Th>Coding Gain</Th>
-                <Th>η, бит/с/Гц</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['Некодированный', 'AWGN', 'BPSK', '—', '≈2.4×10⁻²', '6.8 дБ', '0 дБ', '1.0'],
-                ['Учебный LDPC', 'AWGN', 'BPSK', '(24,12)', '≈8×10⁻³', '4.0 дБ', '2.8 дБ', '0.33'],
-                ['QC LDPC', 'AWGN', 'BPSK', '(96,48)', '≈3×10⁻³', '2.7 дБ', '4.1 дБ', '0.50'],
-                ['5G NR BG1', 'AWGN', 'QPSK', 'Z=8', '≈5×10⁻⁴', '1.0 дБ', '5.8 дБ', '0.64'],
-                ['5G NR BG1', 'Rayleigh', 'QPSK', 'Z=8', '≈2×10⁻³', '2.5 дБ', '7.3 дБ', '0.55'],
-                ['5G NR BG1 OFDM', 'Rayleigh', 'QPSK', 'Z=8+OFDM', '≈8×10⁻⁴', '1.5 дБ', '8.2 дБ', '0.55'],
-                ['5G NR + 2×2 MIMO', 'Rayleigh', '16-QAM', 'Z=8', '≈6×10⁻⁴', '1.2 дБ', '9.1 дБ', '1.89'],
-              ].map(([sc, ch, mod, ldpc, ber, snr, cg, se], i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <Td className="text-left font-medium text-xs">{sc}</Td>
-                  <Td className="text-xs">{ch}</Td>
-                  <Td className="text-xs">{mod}</Td>
-                  <Td className="text-xs">{ldpc}</Td>
-                  <Td className="text-xs font-mono">{ber}</Td>
-                  <Td className="text-xs">{snr}</Td>
-                  <Td className="text-xs font-semibold text-green-700">{cg}</Td>
-                  <Td className="text-xs">{se}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-
-          <H3>3.7.9 Предел Шеннона</H3>
-
-          <P>
-            Теоретический предел Шеннона задаёт минимально достижимое значение Eb/N0
-            при заданной спектральной эффективности (кодовой скорости R):
-          </P>
-
-          <FormulaBlock
-            math="\left(\frac{E_b}{N_0}\right)_{\min} = \frac{2^R - 1}{R}, \quad \text{или} \quad \left(\frac{E_b}{N_0}\right)_{\min,\text{дБ}} = 10\lg\!\frac{2^R - 1}{R}"
-            number="3.28"
-          />
-
-          <Table caption="Сравнение результатов моделирования с пределом Шеннона" tableNumber={3.7}>
-            <thead>
-              <tr>
-                <Th>Профиль / Сценарий</Th>
-                <Th>R</Th>
-                <Th>Предел Шеннона, дБ</Th>
-                <Th>Eb/N0 при BER=10⁻³, дБ</Th>
-                <Th>Отрыв, дБ</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ['LDPC (24,12)', '0.50', '0.0', '4.0', '4.0'],
-                ['QC LDPC (96,48)', '0.50', '0.0', '2.7', '2.7'],
-                ['5G NR BG1 (Z=8) AWGN', '~0.33', '−0.8', '1.0', '1.8'],
-                ['5G NR BG1 + Rayleigh', '~0.33', '−0.8', '2.5', '3.3'],
-                ['5G NR BG1 + 2×2 MIMO', '~0.33', '−0.8', '1.2', '2.0'],
-              ].map(([prof, R, sh, actual, gap], i) => (
-                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <Td className="text-left font-medium text-xs">{prof}</Td>
-                  <Td>{R}</Td>
-                  <Td>{sh}</Td>
-                  <Td>{actual}</Td>
-                  <Td className="font-semibold text-blue-700">{gap}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-
-          <P>
-            Из таблицы 3.7 следует, что наилучший результат обеспечивает профиль
-            5G NR BG1 + AWGN с отрывом от предела Шеннона ~1.8 дБ при BER = 10⁻³,
-            что является хорошим результатом для кода умеренной длины. При увеличении
-            лифтингового размера Z (и, следовательно, длины блока) отрыв может быть
-            дополнительно уменьшен.
-          </P>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════ */}
-        <section id="conclusions">
-          <H2 id="conclusions">3.8 Выводы по главе 3</H2>
-
-          <P>
-            В третьей главе выпускной квалификационной работы проведено детальное
-            экспериментальное исследование и моделирование системы помехоустойчивого
-            LDPC-кодирования в зашумлённом канале мобильной сети 5G. На основании
-            полученных результатов можно сформулировать следующие выводы.
-          </P>
-
-          <div className="space-y-3 pl-6">
-            <div className="flex gap-3">
-              <span className="font-bold text-blue-700 mt-0.5 shrink-0">1.</span>
-              <P className="!indent-0 !mb-0">
-                Разработанное приложение <strong>LDPC Research Studio</strong> реализует
-                полный стек физического уровня 5G NR: LDPC-кодирование по базовым графам BG1/BG2
-                стандарта 3GPP TS&nbsp;38.212, цифровую модуляцию (BPSK, QPSK, 16/64/256-QAM),
-                модели канала AWGN и Rayleigh fading, многонесущую модуляцию OFDM-64/128,
-                режим MIMO 2×2 Diversity и декодирование методом Normalized Min-Sum.
-              </P>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-blue-700 mt-0.5 shrink-0">2.</span>
-              <P className="!indent-0 !mb-0">
-                Профиль <strong>5G NR BG1 (Z=8)</strong> обеспечивает энергетический выигрыш
-                кодирования <strong>5.8 дБ</strong> в канале AWGN при BER = 10⁻³ и порядка
-                <strong>7.3 дБ</strong> в канале с замираниями Рэлея, что существенно превосходит
-                учебный профиль LDPC (24,12) с выигрышем 2.8 дБ и подтверждает эффективность
-                длинных структурированных кодов.
-              </P>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-blue-700 mt-0.5 shrink-0">3.</span>
-              <P className="!indent-0 !mb-0">
-                Применение OFDM с циклическим префиксом и ZF-эквалайзером в канале
-                с замираниями Рэлея снижает межсимвольные помехи и улучшает BER
-                приблизительно на 0.7–1.0 дБ по сравнению с одиночной несущей при тех же
-                параметрах кодирования. Конфигурация OFDM-128 обеспечивает лучшую защиту
-                от многолучёвости за счёт большей длины CP.
-              </P>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-blue-700 mt-0.5 shrink-0">4.</span>
-              <P className="!indent-0 !mb-0">
-                Режим пространственного разнесения 2×2 Diversity дополнительно улучшает
-                помехоустойчивость на <strong>~1.0–1.5 дБ</strong> в канале Рэлея
-                за счёт комбинирования сигналов с нескольких антенн, суммарный энергетический
-                выигрыш составляет <strong>~9.1 дБ</strong>.
-              </P>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-blue-700 mt-0.5 shrink-0">5.</span>
-              <P className="!indent-0 !mb-0">
-                Алгоритм Normalized Min-Sum с коэффициентом <Formula math="\alpha = 0.80" />
-                обеспечивает скорость сходимости, близкую к точному Sum-Product, при этом
-                при Eb/N0 ≥ 10 дБ средняя итерационная сложность составляет лишь 2–3 итерации
-                из максимальных 18, что делает алгоритм эффективным для реальных реализаций.
-              </P>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-blue-700 mt-0.5 shrink-0">6.</span>
-              <P className="!indent-0 !mb-0">
-                Профиль 5G NR BG1 (Z=8) в канале AWGN при BER = 10⁻³ отстоит от предела
-                Шеннона на <strong>~1.8 дБ</strong>, что является хорошим результатом
-                для практического кода. Дальнейшее уменьшение разрыва возможно за счёт
-                увеличения лифтингового размера Z и применения алгоритмов с большим числом
-                итераций.
-              </P>
-            </div>
-            <div className="flex gap-3">
-              <span className="font-bold text-blue-700 mt-0.5 shrink-0">7.</span>
-              <P className="!indent-0 !mb-0">
-                Конфигурация <strong>16-QAM + 5G NR LDPC + 2×2 MIMO</strong> обеспечивает
-                наилучшее соотношение пропускной способности и помехоустойчивости:
-                спектральная эффективность ~1.89 бит/с/Гц при BER &lt; 10⁻³ достигается
-                уже при Eb/N0 ≈ 8–9 дБ, что соответствует реальным условиям развёртывания
-                сетей 5G NR в городской среде.
-              </P>
-            </div>
+        <div className="p-4 border-t border-slate-200">
+          <button
+            onClick={handleCopy}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              copied ? "bg-green-500 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
+            }`}
+          >
+            {copied ? "✓ Скопировано!" : "📋 Скопировать текст главы"}
+          </button>
+          <p className="text-xs text-slate-400 text-center mt-2">для вставки в Word / LaTeX</p>
+        </div>
+      </aside>
+
+      {/* Mobile copy */}
+      <div className="lg:hidden fixed bottom-4 right-4 z-50">
+        <button
+          onClick={handleCopy}
+          className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg text-sm font-medium transition-all ${
+            copied ? "bg-green-500 text-white" : "bg-blue-600 text-white"
+          }`}
+        >
+          {copied ? "✓ Скопировано!" : "📋 Копировать"}
+        </button>
+      </div>
+
+      {/* Main */}
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-8 py-10">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+            <span>📚</span> Выпускная квалификационная работа, 2026
           </div>
-        </section>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-3">
+            ГЛАВА 2. ПОСТАНОВКА ЗАДАЧИ И ИМИТАЦИОННАЯ МОДЕЛЬ СИСТЕМЫ ПОМЕХОУСТОЙЧИВОЙ ПЕРЕДАЧИ ДАННЫХ
+          </h1>
+          <p className="text-slate-500 text-sm">
+            Тема ВКР: «Исследование и моделирование системы помехоустойчивого кодирования в зашумлённом канале мобильной сети 5G»
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {["LDPC", "AWGN", "Rayleigh", "OFDM", "MIMO", "5G NR BG1", "NMS", "QC-LDPC", "HARQ", "CRC"].map((tag) => (
+              <span key={tag} className="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full font-medium">{tag}</span>
+            ))}
+          </div>
+        </div>
 
-        {/* ── Подвал ──────────────────────────────────────────────────────── */}
-        <footer className="mt-16 pt-8 border-t border-gray-300 text-center text-xs text-gray-500 font-sans">
-          <p className="mb-1">
-            <strong>LDPC Research Studio v1.0.0</strong> · ВКР 2026
-          </p>
-          <p className="mb-1">
-            Тема: «Исследование и моделирование системы помехоустойчивого кодирования в зашумлённом канале мобильной сети 5G»
-          </p>
-          <p>
-            Репозиторий:{' '}
-            <a
-              href="https://github.com/ilyxa20046/VKR_2026"
-              className="text-blue-600 hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
+        {/* Chapter Text */}
+        <div id="chapter-content" className="space-y-12 text-slate-700 leading-relaxed">
+
+          {/* ─── 2.1 ─── */}
+          <section id="sec-2.1" className="scroll-mt-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-5 pb-2 border-b-2 border-blue-200">
+              2.1. Постановка задачи исследования
+            </h2>
+            <div className="space-y-4 text-justify">
+              <p>
+                Целью моделирования в рамках данной выпускной квалификационной работы является количественная оценка
+                влияния помехоустойчивого кодирования на качество передачи цифровых данных в зашумлённом канале
+                мобильной сети 5G-подобного типа. Для достижения этой цели необходимо построить имитационную модель
+                цифровой системы связи, позволяющую варьировать параметры канала, модуляции, кодирования и режимов
+                передачи, а также рассчитывать показатели качества приёма и производительности системы.
+              </p>
+              <p>
+                В рамках исследования рассматривается передача цифровой информации по каналу связи при двух принципиально
+                различных режимах: без помехоустойчивого кодирования и с применением LDPC-кодирования и итерационного
+                декодирования. Такой подход позволяет напрямую сравнить эффективность кодирования и определить,
+                насколько использование LDPC-кодов повышает надёжность передачи по сравнению с базовым вариантом.
+              </p>
+              <p>
+                Для обеспечения большей близости модели к современным мобильным системам связи в исследовании
+                учитываются расширенные параметры, характерные для 5G-подобного радиоинтерфейса. В частности,
+                в модель включаются: различные схемы модуляции; модели шумового и замирающего канала; OFDM-подобные
+                режимы передачи; MIMO-подобный пространственный режим; параметры циклического префикса и упрощённой
+                эквализации; дополнительные механизмы — CRC, сегментация транспортного блока, rate matching
+                и HARQ Chase Combining.
+              </p>
+              <p>С учётом поставленной цели в рамках главы формулируются следующие задачи моделирования:</p>
+              <ul className="list-disc pl-6 space-y-1.5">
+                <li>разработать структурную схему системы передачи цифровых данных;</li>
+                <li>задать математическое описание источника данных, кодера, модулятора, канала, демодулятора и декодера;</li>
+                <li>обеспечить возможность исследования как базовых, так и расширенных режимов передачи;</li>
+                <li>реализовать вычисление показателей BER и BLER в зависимости от отношения сигнал/шум;</li>
+                <li>определить дополнительные инженерные метрики для оценки производительности системы;</li>
+                <li>сформировать алгоритм проведения вычислительного эксперимента для одиночного, сравнительного и пакетного анализа сценариев.</li>
+              </ul>
+              <p>
+                В качестве входных параметров имитационной модели рассматриваются: профиль LDPC-кодирования; тип
+                модуляции; тип канала; диапазон значений SNR; число блоков данных в эксперименте; число итераций
+                декодера; коэффициент нормализации алгоритма Normalized Min-Sum; тип waveform; пространственный
+                режим передачи; длина циклического префикса; режим эквализации; параметры CRC и HARQ.
+              </p>
+              <p>
+                На выходе модель должна формировать: BER; BLER; среднее число итераций декодирования; долю успешно
+                сошедшихся блоков; эффективную пропускную способность; спектральную эффективность; требуемое значение
+                SNR для достижения заданного качества; энергетический выигрыш кодированной системы по сравнению
+                с некодированной.
+              </p>
+              <p>
+                Таким образом, постановка задачи исследования ориентирована на создание комплексной имитационной модели,
+                способной воспроизводить основные процессы цифровой передачи в 5G-подобной среде и обеспечивать
+                количественный анализ эффективности помехоустойчивого кодирования.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.2 ─── */}
+          <section id="sec-2.2" className="scroll-mt-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-5 pb-2 border-b-2 border-blue-200">
+              2.2. Структурная схема исследуемой системы
+            </h2>
+            <div className="space-y-4 text-justify">
+              <p>
+                Имитационная модель строится как последовательность взаимосвязанных функциональных блоков,
+                отражающих основные этапы прохождения цифровой информации от источника к приёмнику.
+              </p>
+
+              {/* Block diagram */}
+              <div className="my-6 overflow-x-auto">
+                <div className="min-w-[560px] bg-white border border-slate-200 rounded-xl p-6">
+                  <div className="flex flex-col items-center">
+                    {[
+                      { label: "Источник данных", sub: "Генерация равновероятных независимых бит" },
+                      { label: "Транспортный блок + CRC-16", sub: "Формирование TB, добавление контрольных битов" },
+                      { label: "Сегментация блока (опц.)", sub: "Разбиение TB на кодовые сегменты длиной k" },
+                      { label: "LDPC-кодер / прямая передача", sub: "edu / QC / 5G NR BG1 / BG2 или bypass" },
+                      { label: "Rate Matching (опц.)", sub: "Циклическое повторение до целевой длины E" },
+                      { label: "Модулятор", sub: "BPSK / QPSK / 16-QAM с Gray-кодированием" },
+                      { label: "Waveform + Spatial", sub: "SC / OFDM-64 / OFDM-128 + SISO / 2×2 Diversity" },
+                      { label: "Канал связи", sub: "AWGN / Rayleigh + многолучевой OFDM-канал" },
+                      { label: "Эквализация (One-tap ZF)", sub: "Компенсация замираний на поднесущих" },
+                      { label: "Soft-демодулятор (LLR)", sub: "Метрика минимального евклидова расстояния" },
+                      { label: "LDPC-декодер / жёсткое решение", sub: "NMS / Min-Sum / Sum-Product + синдром" },
+                      { label: "HARQ Chase Combining (опц.)", sub: "Накопление LLR при повторных передачах" },
+                      { label: "CRC-проверка + сборка TB", sub: "Десегментация, верификация контрольной суммы" },
+                      { label: "Блок вычисления метрик", sub: "BER, BLER, throughput, SE, coding gain" },
+                    ].map((block, i, arr) => (
+                      <div key={i} className="flex flex-col items-center w-full">
+                        <div className="w-full max-w-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg px-4 py-2.5 text-center">
+                          <div className="font-semibold text-slate-800 text-sm">{block.label}</div>
+                          <div className="text-xs text-slate-500 mt-0.5">{block.sub}</div>
+                        </div>
+                        {i < arr.length - 1 && (
+                          <div className="flex flex-col items-center my-0.5">
+                            <div className="w-0.5 h-3 bg-blue-300" />
+                            <div className="text-blue-400 text-xs leading-none">▼</div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 text-center mt-2">
+                  Рисунок 2.1 — Структурная схема имитационной модели системы передачи данных
+                </p>
+              </div>
+
+              <p>
+                <strong>Источник данных.</strong> Источник данных формирует случайную двоичную последовательность,
+                моделирующую поток передаваемой цифровой информации. Биты генерируются независимо с равной
+                вероятностью 0,5. Для воспроизводимости экспериментов используется фиксируемый seed генератора.
+              </p>
+              <p>
+                <strong>Формирование транспортного блока и CRC.</strong> Исходная последовательность образует
+                транспортный блок (Transport Block, TB) фиксированной длины. При включённой опции CRC к блоку
+                добавляется 16-битная циклическая контрольная сумма, обеспечивающая надёжную индикацию ошибок
+                декодирования на приёмной стороне.
+              </p>
+              <p>
+                <strong>Сегментация блока.</strong> При необходимости транспортный блок разбивается на сегменты
+                длиной k бит — по размеру информационной части кодового слова выбранного LDPC-профиля.
+                Каждый сегмент кодируется и декодируется независимо.
+              </p>
+              <p>
+                <strong>LDPC-кодер.</strong> В кодированном режиме каждый сегмент проходит через LDPC-кодер,
+                в результате чего формируется кодовое слово с избыточностью. В некодированном режиме данный
+                блок пропускается, и информация передаётся напрямую на модуляцию.
+              </p>
+              <p>
+                <strong>Rate Matching.</strong> При включённой опции согласования скорости длина кодового слова
+                приводится к целевому размеру E путём циклического повторения или усечения битов, что эмулирует
+                механизм ресурсного отображения в стандарте 5G NR.
+              </p>
+              <p>
+                <strong>Модулятор.</strong> Бинарная последовательность преобразуется в последовательность
+                комплексных символов согласно выбранной схеме модуляции: BPSK, QPSK или 16-QAM с Grey-кодированием.
+              </p>
+              <p>
+                <strong>Waveform и пространственная обработка.</strong> Передаваемый сигнал формируется в одном
+                из трёх waveform-режимов: Single-carrier, OFDM-64, OFDM-128 — и передаётся по одной (SISO)
+                или нескольким (2×2 Diversity) пространственным ветвям.
+              </p>
+              <p>
+                <strong>Канал связи.</strong> Передаваемый сигнал проходит через модель канала: AWGN или
+                Rayleigh fading (с многолучевым OFDM-каналом при использовании OFDM-waveform).
+              </p>
+              <p>
+                <strong>Эквализация и soft-демодуляция.</strong> На приёмной стороне для OFDM-режимов применяется
+                one-tap Zero-Forcing эквализация. Принятый сигнал преобразуется в логарифмические отношения
+                правдоподобия (LLR) по критерию минимального евклидова расстояния.
+              </p>
+              <p>
+                <strong>LDPC-декодер.</strong> Выполняется итерационное декодирование с проверкой синдрома.
+                Поддерживаются алгоритмы NMS, Min-Sum и Sum-Product. В некодированном режиме производится
+                жёсткое принятие решений по LLR.
+              </p>
+              <p>
+                <strong>HARQ Chase Combining.</strong> При неудачном декодировании блока запрашивается повторная
+                передача того же кодового слова, а LLR от всех передач накапливаются суммированием.
+              </p>
+              <p>
+                <strong>Блок вычисления показателей качества.</strong> На основе сравнения переданной и
+                восстановленной информации вычисляются BER, BLER и другие показатели качества. Средства анализа
+                формируют таблицы, графики и текстовые отчёты для одиночного, A/B-сравнительного и пакетного
+                режимов анализа.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3 ─── */}
+          <section id="sec-2.3" className="scroll-mt-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-5 pb-2 border-b-2 border-blue-200">
+              2.3. Математическое описание имитационной модели
+            </h2>
+            <p className="text-justify">
+              В данном разделе приводится формальное математическое описание каждого функционального блока
+              имитационной модели. Все обозначения соответствуют принятым в теории кодирования и цифровой связи
+              и согласованы с реализацией в разработанном приложении LDPC Research Studio.
+            </p>
+          </section>
+
+          {/* ─── 2.3.1 ─── */}
+          <section id="sec-2.3.1" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              2.3.1. Формирование исходной двоичной последовательности
+            </h3>
+            <div className="space-y-4 text-justify">
+              <p>Пусть исходная информационная последовательность задаётся вектором</p>
+              <Formula>{"u = (u\u2081, u\u2082, \u2026, u_k),   u\u1d62 \u2208 {0, 1},     (2.1)"}</Formula>
+              <p>
+                где k — длина информационного блока. В модели предполагается, что биты независимы и равновероятны:
+              </p>
+              <Formula>{"P(u\u1d62 = 0) = P(u\u1d62 = 1) = 0,5.     (2.2)"}</Formula>
+              <p>
+                Такой подход является стандартным при анализе помехоустойчивости: он позволяет исключить влияние
+                избыточной структуры источника и сосредоточиться на свойствах канала и кода. В программной реализации
+                генерация выполняется псевдослучайным генератором Java с фиксируемым начальным значением (seed),
+                что обеспечивает воспроизводимость экспериментов.
+              </p>
+              <p>
+                При включённом режиме CRC к информационному блоку u добавляется 16-битная циклическая контрольная
+                сумма, образуя транспортный блок:
+              </p>
+              <Formula>{"u' = CRC\u2081\u2086(u) = (u\u2081, u\u2082, \u2026, u_k, c\u2081, c\u2082, \u2026, c\u2081\u2086),     (2.3)"}</Formula>
+              <p>
+                где (c₁, …, c₁₆) — биты контрольной суммы, вычисленные по стандартному полиному CRC-16.
+                На приёмной стороне после декодирования выполняется проверка CRC: блок считается ошибочным,
+                если контрольная сумма не совпадает.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.2 ─── */}
+          <section id="sec-2.3.2" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              2.3.2. LDPC-кодирование и профили кодов
+            </h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                В кодированном режиме информационный блок u преобразуется в кодовое слово c длиной n:
+              </p>
+              <Formula>{"c = u \u00b7 G  (mod 2),     (2.4)"}</Formula>
+              <p>
+                где G — порождающая матрица кода размером k×n, n {">"} k, R = k/n — скорость кодирования.
+                Для систематических кодов кодовое слово записывается как c = (u | p), где p — вектор проверочных
+                бит. LDPC-код задаётся разреженной проверочной матрицей H размером m×n (m = n − k),
+                удовлетворяющей условию H · cᵀ = 0 (mod 2). Разработанная система поддерживает четыре профиля
+                кодов, описанных в таблице 2.1.
+              </p>
+
+              {/* Table 2.1 */}
+              <div className="overflow-x-auto my-4">
+                <table className="w-full text-sm border-collapse">
+                  <caption className="text-xs text-slate-500 mb-2 text-left">
+                    Таблица 2.1 — Профили LDPC-кодов в имитационной модели
+                  </caption>
+                  <thead>
+                    <tr className="bg-slate-100">
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-700">Профиль</th>
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-700">Параметры (k, n)</th>
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-700">Скорость R</th>
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-700">Описание</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Учебный (edu)", "(12, 24)", "1/2", "Базовая учебная модель с регулярной структурой H; циклические сдвиги {0, 3, 7}"],
+                      ["QC-inspired", "(48, 96)", "1/2", "QC-LDPC, z=8, 6 групп строк и столбцов; сдвиги заданы базовым графом 6×6"],
+                      ["5G NR BG1 (Z=8)", "(176, 368)", "≈1/2", "Base Graph 1 по 3GPP TS 38.212; 22 инф. столбца, 46 строк, lifting size Z=8"],
+                      ["5G NR BG2 (Z=8)", "(80, 416)", "≈1/5", "Base Graph 2 по 3GPP TS 38.212; 10 инф. столбцов, 42 строки, lifting size Z=8"],
+                    ].map(([p, params, r, desc], i) => (
+                      <tr key={i} className={i % 2 === 1 ? "bg-slate-50" : ""}>
+                        <td className="border border-slate-300 px-3 py-2 font-medium">{p}</td>
+                        <td className="border border-slate-300 px-3 py-2 font-mono text-xs">{params}</td>
+                        <td className="border border-slate-300 px-3 py-2">{r}</td>
+                        <td className="border border-slate-300 px-3 py-2 text-slate-600">{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p>
+                <strong>Квазициклическая структура.</strong> Профили QC-inspired и 5G NR BG1/BG2 основаны на
+                квазициклических LDPC-кодах. Их проверочная матрица H составляется из циклически сдвинутых
+                единичных матриц размера z×z:
+              </p>
+              <Formula>{"H[rg\u00b7z + i][cg\u00b7z + (i + s\u209c_\u1d63_\u209c,\u209c_\u1d64) mod z] = 1,     (2.5)"}</Formula>
+              <p>
+                где rg, cg — номера группы строк и столбцов в базовом графе, s — значение сдвига
+                (значение −1 соответствует нулевому блоку). Для кода 5G NR сдвиги загружаются из файла базового
+                графа NR_1_0_8.txt, соответствующего стандарту 3GPP TS 38.212.
+              </p>
+              <p>
+                <strong>Кодирование.</strong> Систематическое кодирование выполняется путём явного вычисления
+                проверочных бит. Проверочная матрица разбивается на информационную часть A (m×k) и паритетную
+                часть B (m×m): H = [A | B]. Для нахождения вектора паритетных бит p решается уравнение
+                B·pᵀ = A·uᵀ (mod 2). Предварительно вычисленная трансформ-матрица T = B⁻¹A (в поле GF(2))
+                позволяет закодировать любой информационный блок за одну операцию умножения вектора на матрицу:
+              </p>
+              <Formula>{"p\u1d62 = T\u1d62 \u00b7 u  (mod 2),   i = 0, 1, \u2026, m\u22121.     (2.6)"}</Formula>
+              <p>
+                Кодовое слово формируется как конкатенация информационных и паритетных бит: c = (u, p).
+                При включённой сегментации транспортный блок разбивается на сегменты длиной k и каждый
+                кодируется независимо.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.3 ─── */}
+          <section id="sec-2.3.3" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">2.3.3. Модуляция</h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                В работе рассматриваются три схемы модуляции: BPSK (1 бит/символ), QPSK (2 бит/символ)
+                и 16-QAM (4 бит/символ). Во всех случаях применяется Gray-кодирование, минимизирующее
+                число битовых ошибок при ошибке символа.
+              </p>
+              <p>
+                <strong>BPSK.</strong> При двоичной фазовой манипуляции каждый бит отображается
+                в один вещественный символ:
+              </p>
+              <Formula>{"s = 1 \u2212 2u,   u \u2208 {0, 1},   s \u2208 {\u22121, +1}.     (2.7)"}</Formula>
+              <p>
+                <strong>QPSK.</strong> При квадратурной фазовой манипуляции два бита (u₁, u₂)
+                отображаются в комплексный символ:
+              </p>
+              <Formula>{"s = (a + jb) / \u221a2,   a, b \u2208 {\u22121, +1},     (2.8)"}</Formula>
+              <p>где нормировка на √2 обеспечивает единичную среднюю энергию символа.</p>
+              <p>
+                <strong>16-QAM.</strong> Четыре бита отображаются в комплексный символ из 16-точечного
+                созвездия:
+              </p>
+              <Formula>{"s = (a + jb) / \u221a10,   a, b \u2208 {\u22123, \u22121, +1, +3},     (2.9)"}</Formula>
+              <p>
+                где нормировка на √10 = √((2/3)·(M²−1)) при M = 4 уровнях по каждой оси обеспечивает
+                единичную среднюю мощность сигнала. В реализации используется универсальный алгоритм
+                построения квадратного QAM-созвездия с Gray-кодированием через функцию grayPamLevel(),
+                что позволяет единым способом описать 16-QAM, 64-QAM и 256-QAM.
+              </p>
+              <p>
+                Мягкое значение LLR для бита bᵢ формируется по критерию минимального евклидова расстояния.
+                Для каждого бита определяются подмножества символов C₀ (бит bᵢ = 0) и C₁ (бит bᵢ = 1):
+              </p>
+              <Formula>{"LLR\u1d62 = (min\u209b\u208b\u2c7c\u2081 |y \u2212 h\u00b7s|\u00b2  \u2212  min\u209b\u208b\u2c7c\u2080 |y \u2212 h\u00b7s|\u00b2) / (2\u03c3\u00b2),     (2.10)"}</Formula>
+              <p>
+                где y — принятый символ, h — коэффициент канала, σ² — дисперсия шума. Отрицательный LLR
+                означает предпочтение бита «1».
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.4 ─── */}
+          <section id="sec-2.3.4" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              2.3.4. OFDM-подобный waveform и циклический префикс
+            </h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                Рассматриваются три варианта waveform: Single-carrier (SC), OFDM-64 и OFDM-128. В OFDM-модели
+                символы распределяются по N поднесущим. Для борьбы с межсимвольной интерференцией (ISI)
+                используется циклический префикс длиной N_cp. Полезная доля времени символа:
+              </p>
+              <Formula>{"η_CP = N / (N + N_cp),     (2.11)"}</Formula>
+              <p>
+                где N — число поднесущих (64 или 128), N_cp — длина циклического префикса.
+                С учётом реализационных потерь и эффективности эквализации суммарный коэффициент
+                полезной эффективности OFDM-символа:
+              </p>
+              <Formula>{"η_OFDM = \u03b1 \u00b7 η_CP \u00b7 η_EQ,     (2.12)"}</Formula>
+              <p>
+                где α — коэффициент реализационных потерь (α = 0,93 для OFDM-128, α = 0,90 для OFDM-64),
+                η_EQ — коэффициент эффективности эквализации (η_EQ = 0,95 при One-tap ZF, η_EQ = 0,85/0,82
+                без эквализации). Для SC-режима η_OFDM = 1,0. Параметры waveform оказывают прямое влияние
+                на результирующую спектральную эффективность, что необходимо учитывать при сравнении сценариев.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.5 ─── */}
+          <section id="sec-2.3.5" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              2.3.5. Пространственный режим передачи
+            </h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                Рассматриваются два пространственных режима: SISO и 2×2 Diversity. В режиме SISO передача
+                и приём происходят по одной пространственной ветви. В режиме 2×2 Diversity используются
+                L = 4 независимые пространственные ветви, каждая из которых испытывает независимые замирания
+                Рэлея. Мягкая оценка символа с учётом всех ветвей формируется суммированием квадратов
+                евклидовых расстояний:
+              </p>
+              <Formula>{"d\u00b2_total(s) = \u03a3\u2097\u208c\u2081\u1d4f |y\u2097 \u2212 h\u2097 \u00b7 s|\u00b2,     (2.13)"}</Formula>
+              <p>
+                что соответствует объединению методом максимального правдоподобия при независимых ветвях
+                с одинаковой мощностью шума. LLR для каждого бита вычисляется на основе суммарного
+                расстояния (2.13) аналогично формуле (2.10). Такой подход обеспечивает выигрыш по разнесению
+                (diversity gain), снижая влияние глубоких замираний в канале Рэлея без увеличения числа
+                независимых потоков данных.
+              </p>
+              <p>
+                Коэффициенты всех ветвей обновляются синхронно: на каждый OFDM-символ (при OFDM-waveform)
+                или через каждые 12 символов (при SC-waveform, fading span = 12), что моделирует
+                временну́ю корреляцию замираний.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.6 ─── */}
+          <section id="sec-2.3.6" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">2.3.6. Модель канала связи</h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                <strong>Канал AWGN.</strong> Для канала с аддитивным белым гауссовским шумом принимаемый
+                сигнал определяется как:
+              </p>
+              <Formula>{"y = x + n,     (2.14)"}</Formula>
+              <p>
+                где x — переданный символ, n = n_I + jn_Q — комплексный гауссовский шум (n_I, n_Q ~ N(0, σ²)).
+                Коэффициент канала h = 1 + 0·j.
+              </p>
+              <p>
+                <strong>Канал Рэлея.</strong> Для канала с замираниями Рэлея:
+              </p>
+              <Formula>{"y = h \u00b7 x + n,     (2.15)"}</Formula>
+              <p>
+                где h — комплексный коэффициент канала:
+              </p>
+              <Formula>{"h = (h_I + jh_Q) / \u221a2,   h_I, h_Q ~ N(0, 1).     (2.16)"}</Formula>
+              <p>
+                Модуль |h| имеет распределение Рэлея со средним E[|h|²] = 1. Коэффициент канала периодически
+                обновляется с учётом параметра fading span.
+              </p>
+              <p>
+                <strong>Многолучевой OFDM-канал.</strong> В OFDM-подобных режимах коэффициент канала на каждой
+                поднесущей моделируется как суперпозиция T лучей:
+              </p>
+              <Formula>{"h_sub = \u03a3\u209c\u208c\u2080^(T\u22121)  (1/\u221a(t+1)) \u00b7 (g_{t,I} + jg_{t,Q}) / \u221a2,   g ~ N(0,1),     (2.17)"}</Formula>
+              <p>
+                где T = 3 для OFDM-64 и T = 4 для OFDM-128. Убывающие веса 1/√(t+1) воспроизводят типичный
+                экспоненциально спадающий профиль задержек в городских сценариях и обеспечивают частотную
+                селективность канала.
+              </p>
+              <p>
+                <strong>Вычисление стандартного отклонения шума.</strong> Связь σ с Eb/N0:
+              </p>
+              <Formula>{"σ = √(1 / (2 \u00b7 bps \u00b7 R \u00b7 E_b/N0)),     (2.18)"}</Formula>
+              <p>
+                где bps — число бит на символ, R — скорость кодирования (R = 1 для некодированного режима).
+                Поддерживаются два домена SNR: Eb/N0 и Es/N0, с взаимным пересчётом.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.7 ─── */}
+          <section id="sec-2.3.7" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              2.3.7. Эквализация и soft-демодуляция
+            </h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                Для OFDM-подобных режимов с каналом Рэлея применяется one-tap Zero-Forcing (ZF) эквализация:
+              </p>
+              <Formula>{"ŷ = y / h = x + n/h.     (2.19)"}</Formula>
+              <p>
+                После ZF-эквализации принятый символ сравнивается с идеальными точками созвездия при h = 1.
+                В режиме без эквализации символ передаётся в soft-демодулятор с учётом фактического h.
+              </p>
+              <p>
+                Мягкие оценки бит вычисляются по формуле (2.10). Для BPSK в AWGN-канале с h = 1:
+              </p>
+              <Formula>{"LLR\u1d62^(BPSK) = 2\u00b7Re(y) / σ²,     (2.20)"}</Formula>
+              <p>
+                что является стандартным результатом для BPSK-демодуляции в AWGN-канале. Полученные LLR
+                непосредственно передаются в LDPC-декодер как канальные LLR, инициализирующие итерационный
+                процесс передачи сообщений по графу Таннера.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.8 ─── */}
+          <section id="sec-2.3.8" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">2.3.8. LDPC-декодирование</h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                Декодирование LDPC-кодов выполняется итерационным алгоритмом передачи сообщений по графу Таннера
+                (Belief Propagation, BP). Реализованы три варианта: Normalized Min-Sum (NMS), Min-Sum и
+                Sum-Product.
+              </p>
+              <p>
+                Обозначим: q_{"{m→n}"} — сообщение от переменного узла n к проверочному узлу m,
+                r_{"{m→n}"} — обратное сообщение. Инициализация: q⁽⁰⁾_{"{m→n}"} = LLR_n (канальное значение).
+              </p>
+              <p><strong>Обновление проверочных узлов (NMS):</strong></p>
+              <Formula>{"r_{m\u2192n}^(t) = \u03b1 \u00b7 (\u220f_{n'\u2208N(m)\\n} sign(q_{m\u2192n'}^(t))) \u00b7 min_{n'\u2208N(m)\\n} |q_{m\u2192n'}^(t)|,     (2.21)"}</Formula>
+              <p>
+                где α ∈ [0,5; 1,0] — коэффициент нормализации (настраиваемый параметр), N(m)\n — множество
+                переменных узлов, связанных с проверочным узлом m, кроме n. Произведение знаков определяет
+                знак сообщения, минимум абсолютных значений — его амплитуду.
+              </p>
+              <p><strong>Обновление переменных узлов:</strong></p>
+              <Formula>{"q_{m\u2192n}^(t) = LLR_n + \u03a3_{m'\u2208M(n)\\m} r_{m'\u2192n}^(t),     (2.22)"}</Formula>
+              <p>где M(n)\m — множество проверочных узлов, связанных с n, кроме m.</p>
+              <p><strong>Апостериорное LLR и жёсткое решение:</strong></p>
+              <Formula>{"L_n^(t) = LLR_n + \u03a3_{m\u2208M(n)} r_{m\u2192n}^(t),   b\u0302_n = (L_n^(t) < 0) ? 1 : 0.     (2.23)"}</Formula>
+              <p><strong>Синдромная проверка (критерий останова):</strong></p>
+              <Formula>{"s_m = \u03a3_{n\u2208N(m)} b\u0302_n  (mod 2) = 0,   \u2200m.     (2.24)"}</Formula>
+              <p>
+                Итерации прекращаются при выполнении условия (2.24) для всех проверочных узлов (нулевой синдром,
+                декодирование успешно) или при достижении I_max итераций. Число использованных итераций I_used
+                фиксируется для статистики.
+              </p>
+              <p>
+                <strong>Алгоритм Sum-Product.</strong> В классическом BP обновление проверочного узла:
+              </p>
+              <Formula>{"r_{m\u2192n}^(t) = 2\u00b7arctanh(\u220f_{n'\u2208N(m)\\n} tanh(q_{m\u2192n'}^(t)/2)).     (2.25)"}</Formula>
+              <p>
+                Алгоритм Min-Sum соответствует формуле (2.21) при α = 1. NMS с α {"<"} 1 компенсирует
+                оптимистичность оценок Min-Sum, повышая точность при меньшей вычислительной сложности.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.3.9 ─── */}
+          <section id="sec-2.3.9" className="scroll-mt-6 pl-0 sm:pl-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">
+              2.3.9. Дополнительные механизмы модели
+            </h3>
+            <div className="space-y-4 text-justify">
+              <p>
+                <strong>Rate Matching.</strong> Согласование скорости выполняется циклическим повторением
+                кодового слова длины n до целевой длины E:
+              </p>
+              <Formula>{"txBits[i] = codedBits[i mod n],   i = 0, 1, \u2026, E\u22121.     (2.26)"}</Formula>
+              <p>
+                На приёмной стороне LLR из позиций одного бита кодового слова суммируются (de-rate matching):
+              </p>
+              <Formula>{"LLR_out[j] = \u03a3_{i: i mod n = j} LLR_rm[i],   j = 0, 1, \u2026, n\u22121.     (2.27)"}</Formula>
+              <p>
+                <strong>HARQ Chase Combining.</strong> При неудачном декодировании LLR от всех передач
+                суммируются перед повторной попыткой:
+              </p>
+              <Formula>{"LLR_acc^(k) = \u03a3_{j=1}^k LLR_rx^(j).     (2.28)"}</Formula>
+              <p>
+                Суммирование LLR в Chase Combining оптимально при независимых шумах и эквивалентно
+                увеличению эффективного SNR примерно на 3 дБ при каждой дополнительной передаче.
+              </p>
+              <p>
+                <strong>Адаптивная остановка.</strong> Для ускорения моделирования предусмотрен механизм
+                адаптивной остановки: расчёт для данной точки SNR прекращается после набора MinErrorEvents = 50
+                ошибок или достижения MaxBlocksPerSNR = 2000 блоков.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.4 ─── */}
+          <section id="sec-2.4" className="scroll-mt-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-5 pb-2 border-b-2 border-blue-200">
+              2.4. Показатели качества и эффективности модели
+            </h2>
+            <div className="space-y-6 text-justify">
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.1. Вероятность битовой ошибки (BER)</h4>
+                <p>Показатель BER определяется как отношение числа ошибочно принятых бит к общему числу переданных бит:</p>
+                <Formula>{"BER = N_err_bits / N_total_bits.     (2.29)"}</Formula>
+                <p className="mt-2">
+                  Для статистической надёжности оценки вычисляется доверительный интервал по методу Уилсона
+                  (Wilson score interval) для заданного уровня доверия (по умолчанию 95%):
+                </p>
+                <Formula>{"BER ± z_{α/2} \u00b7 \u221a(BER(1\u2212BER)/N),     (2.30)"}</Formula>
+                <p className="mt-2">
+                  где z_{"{α/2}"} — квантиль стандартного нормального распределения (z = 1,96 при α = 0,95),
+                  N = N_total_bits.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.2. Вероятность блочной ошибки (BLER)</h4>
+                <p>Показатель BLER определяется как отношение числа ошибочных блоков к общему числу переданных:</p>
+                <Formula>{"BLER = N_err_blocks / N_total_blocks.     (2.31)"}</Formula>
+                <p className="mt-2">
+                  Блок считается ошибочным либо при наличии хотя бы одного ошибочного бита (Bit Mismatch),
+                  либо при несовпадении CRC (CRC Fail). Выбор критерия определяется параметром BLER Criterion.
+                  Доверительный интервал вычисляется аналогично (2.30).
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.3. Среднее число итераций и успешность</h4>
+                <p>Среднее число итераций декодера по всем кодовым словам:</p>
+                <Formula>{"I_avg = (1/N_cw) \u00b7 \u03a3\u1d62 I\u1d62,     (2.32)"}</Formula>
+                <p className="mt-2">
+                  где I_i — число итераций декодирования i-го кодового слова, N_cw — общее число кодовых слов.
+                  Доля успешно сошедшихся блоков:
+                </p>
+                <Formula>{"P_conv = 1 \u2212 BLER.     (2.33)"}</Formula>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.4. Спектральная эффективность</h4>
+                <p>Спектральная эффективность системы (бит/символ):</p>
+                <Formula>{"η_SE = bps \u00b7 R \u00b7 η_OFDM \u00b7 (1 \u2212 BLER),     (2.34)"}</Formula>
+                <p className="mt-2">
+                  где bps — число бит на символ (1 для BPSK, 2 для QPSK, 4 для 16-QAM), R — скорость
+                  кодирования, η_OFDM — коэффициент (2.12). Множитель (1 − BLER) учитывает долю успешно
+                  принятых блоков.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.5. Эффективная пропускная способность</h4>
+                <p>Эффективная пропускная способность (Мбит/с):</p>
+                <Formula>{"T_eff = R_sym \u00b7 bps \u00b7 R \u00b7 η_OFDM \u00b7 (1 \u2212 BLER),     (2.35)"}</Formula>
+                <p className="mt-2">
+                  где R_sym = 20 МБод — условная символьная скорость в модели. Данный показатель позволяет
+                  оценить не только надёжность, но и производительность режима передачи.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.6. Требуемое значение SNR</h4>
+                <p>
+                  Для стандартных целевых порогов качества методом линейной интерполяции в логарифмическом
+                  масштабе определяются:
+                </p>
+                <ul className="list-disc pl-6 space-y-1 mt-2">
+                  <li>SNR_req(BER = 10⁻³) — требуемое Eb/N0 для достижения BER = 10⁻³;</li>
+                  <li>SNR_req(BLER = 10⁻¹) — требуемое Eb/N0 для достижения BLER = 10⁻¹.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.7. Энергетический выигрыш кодирования</h4>
+                <p>Энергетический выигрыш (Coding Gain) кодированной системы относительно некодированной:</p>
+                <Formula>{"G_E = SNR_uncoded,target \u2212 SNR_coded,target,   [дБ].     (2.36)"}</Formula>
+                <p className="mt-2">
+                  Чем больше это значение, тем эффективнее применение кодирования. Сравнение производится
+                  при одинаковом целевом уровне качества (BER = 10⁻³ или BLER = 10⁻¹).
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-800 mb-2">2.4.8. Метрики HARQ</h4>
+                <p>При включённом HARQ дополнительно вычисляются:</p>
+                <ul className="list-disc pl-6 space-y-1.5 mt-2">
+                  <li>среднее число повторных передач на сегмент: Avg_retx = Σ extra_tx_i / N_cw;</li>
+                  <li>доля успешно декодированных сегментов за все попытки: P_harq = N_success_cw / N_cw.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* ─── 2.5 ─── */}
+          <section id="sec-2.5" className="scroll-mt-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-5 pb-2 border-b-2 border-blue-200">
+              2.5. Алгоритм проведения имитационного эксперимента
+            </h2>
+            <div className="space-y-4 text-justify">
+              <p>
+                Имитационный эксперимент организуется как последовательный расчёт характеристик системы для
+                ряда значений SNR. Для каждой точки SNR параллельно моделируются два режима — кодированный
+                и некодированный, — что позволяет напрямую сравнивать их показатели. Алгоритм моделирования
+                включает следующие этапы:
+              </p>
+              <div className="my-4 space-y-2">
+                {[
+                  {
+                    n: "1",
+                    title: "Задание параметров сценария",
+                    desc: "Выбираются: профиль LDPC (edu / QC / 5G NR BG1/BG2), схема модуляции, тип канала, диапазон SNR с шагом, число блоков, waveform, пространственный режим, длина CP, алгоритм декодера, коэффициент нормализации α, параметры CRC, rate matching и HARQ."
+                  },
+                  {
+                    n: "2",
+                    title: "Инициализация кодека",
+                    desc: "ActiveCode инициализируется на основе профиля: для 5G NR BG1 строится QC-LDPC спецификация из базового графа с заданным Z; трансформ-матрица T = B⁻¹A вычисляется однократно и кэшируется."
+                  },
+                  {
+                    n: "3",
+                    title: "Цикл по точкам SNR",
+                    desc: "Для каждого snrDb из диапазона запускается simulatePoint(snrDb): вычисляются σ_uncoded (R=1) и σ_coded (фактический R), используются раздельные RNG с детерминированными seeds для двух режимов."
+                  },
+                  {
+                    n: "4",
+                    title: "Некодированный режим",
+                    desc: "Информационная последовательность напрямую модулируется, передаётся через канал (σ_uncoded), демодулируется; выполняется жёсткое принятие решений по LLR. Считаются ошибочные биты и блоки."
+                  },
+                  {
+                    n: "5",
+                    title: "Кодированный режим — кодирование",
+                    desc: "TB формируется (± CRC), разбивается на сегменты, каждый кодируется LDPC-кодером. При включённом rate matching кодовое слово приводится к длине E."
+                  },
+                  {
+                    n: "6",
+                    title: "Передача через канал",
+                    desc: "Каждый сегмент модулируется, формируются пространственные ветви, накладывается шум с σ_coded. При HARQ допускаются повторные передачи с накоплением LLR."
+                  },
+                  {
+                    n: "7",
+                    title: "Декодирование",
+                    desc: "На приёмной стороне: эквализация (One-tap ZF при OFDM), soft-демодуляция (LLR по (2.10)), de-rate matching, итерационное LDPC-декодирование с синдромной проверкой. Фиксируются I_used и флаг успеха."
+                  },
+                  {
+                    n: "8",
+                    title: "Проверка CRC и сборка блока",
+                    desc: "Декодированные сегменты конкатенируются в TB. При включённом CRC выполняется проверка контрольной суммы. Блок признаётся ошибочным согласно выбранному критерию BLER."
+                  },
+                  {
+                    n: "9",
+                    title: "Адаптивная остановка",
+                    desc: "Цикл по блокам прерывается после накопления MinErrorEvents = 50 ошибок или по достижении MaxBlocksPerSNR = 2000 блоков — в зависимости от того, что наступит раньше."
+                  },
+                  {
+                    n: "10",
+                    title: "Расчёт метрик точки SNR",
+                    desc: "Определяются: BER, BLER с доверительными интервалами Уилсона (95%), средние итерации, P_conv, throughput (2.35), SE (2.34), метрики HARQ."
+                  },
+                  {
+                    n: "11",
+                    title: "Постобработка",
+                    desc: "По кривым BER(SNR) и BLER(SNR) интерполяцией находятся required SNR для BER = 10⁻³ и BLER = 10⁻¹. Вычисляется энергетический выигрыш G_E (2.36)."
+                  },
+                  {
+                    n: "12",
+                    title: "Формирование выходных данных",
+                    desc: "Строятся графики BER(SNR) и BLER(SNR), таблицы результатов. Генерируются экспортные файлы: CSV, TXT, HTML, PNG-графики, материалы для защиты ВКР (Defence Mode)."
+                  },
+                ].map((step) => (
+                  <div key={step.n} className="flex gap-4 bg-white border border-slate-200 rounded-xl p-4">
+                    <div className="shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      {step.n}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-800 text-sm mb-1">{step.title}</div>
+                      <div className="text-sm text-slate-600">{step.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 text-center">
+                Рисунок 2.2 — Алгоритм проведения имитационного эксперимента
+              </p>
+              <p>
+                Такой алгоритм обеспечивает воспроизводимость экспериментов, возможность сравнения большого
+                числа сценариев и удобство последующего анализа. Параллельное моделирование кодированного
+                и некодированного режимов в рамках одной точки SNR исключает систематическое расхождение,
+                обусловленное разными реализациями шума.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.6 ─── */}
+          <section id="sec-2.6" className="scroll-mt-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-5 pb-2 border-b-2 border-blue-200">
+              2.6. Программная реализация имитационной модели
+            </h2>
+            <div className="space-y-4 text-justify">
+              <p>
+                Имитационная модель реализована в виде мультиплатформенного desktop-приложения LDPC Research
+                Studio на базе платформы Java 17 + JavaFX 17 с использованием сборочной системы Maven 3.8+.
+                Выбор данного технологического стека обоснован необходимостью обеспечить достаточную
+                вычислительную производительность для итерационного BP-декодирования, кроссплатформенность
+                (Windows, Linux, RED OS) и удобство визуализации результатов средствами JavaFX.
+              </p>
+              <p>
+                Архитектура приложения построена по паттерну MVC (Model–View–Controller). Физический
+                уровень (PHY) выделен в отдельный пакет <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono">service/phy/</code>.
+                Ключевые классы физического уровня описаны в таблице 2.2.
+              </p>
+
+              <div className="overflow-x-auto my-4">
+                <table className="w-full text-sm border-collapse">
+                  <caption className="text-xs text-slate-500 mb-2 text-left">
+                    Таблица 2.2 — Ключевые классы физического уровня приложения LDPC Research Studio
+                  </caption>
+                  <thead>
+                    <tr className="bg-slate-100">
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-700">Класс</th>
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-700">Назначение</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["LdpcCodec", "LDPC кодер/декодер для 5G NR BG1/BG2: QC-расширение матрицы H, GF(2)-инверсия матрицы B, NMS-декодирование с синдромной проверкой"],
+                      ["CodecEngine", "Диспетчер кодеков: edu (12,24), QC-inspired (48,96), 5G NR BG1/BG2, Polar (128,64), Turbo LTE; три алгоритма декодирования"],
+                      ["ChannelEngine", "Модели канала AWGN/Rayleigh; многолучевой OFDM-канал (T лучей); ZF-эквализация; soft LLR-демодуляция"],
+                      ["ModulationEngine", "BPSK, QPSK, QAM (16/64/256) с Gray-кодированием; универсальное квадратное QAM-созвездие через grayPamLevel()"],
+                      ["ExperimentRunner", "Полный цикл: генерация → ± CRC → ± сегм. → кодирование → канал → декодирование → ± HARQ CC → метрики"],
+                      ["PhyMetricsEngine", "BER, BLER, throughput, SE; пересчёт SNR-доменов Eb/N0 ↔ Es/N0; доверительные интервалы (Wilson)"],
+                      ["BitTransport", "Сегментация/десегментация TB; rate matching/de-matching; дополнение (padding) до длины k"],
+                      ["NrBaseGraphLoader", "Загрузка сдвигов Base Graph 1/2 из NR_1_0_8.txt (3GPP TS 38.212) для заданного lifting size Z"],
+                      ["StatsMath", "Wilson confidence interval; safeDivide; вспомогательная статистика"],
+                    ].map(([cls, desc], i) => (
+                      <tr key={i} className={i % 2 === 1 ? "bg-slate-50" : ""}>
+                        <td className="border border-slate-300 px-3 py-2 font-mono text-xs text-blue-700 whitespace-nowrap">{cls}</td>
+                        <td className="border border-slate-300 px-3 py-2 text-slate-700">{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p>
+                Расчёт метрик для одной точки SNR осуществляется методом
+                <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono mx-1">ExperimentRunner.simulatePoint()</code>,
+                который параллельно запускает некодированный и кодированный режимы с детерминированными, но
+                независимыми псевдослучайными генераторами. Это обеспечивает корректное статистическое сравнение
+                режимов.
+              </p>
+              <p>
+                Пользовательский интерфейс разделён на пять экранов: Главная (Dashboard), Моделирование
+                (Simulation), Результаты (Results), Сравнение (Compare) и Пакетный анализ (Batch). Экспорт
+                поддерживается в форматах CSV, TXT, HTML, PNG, а также в виде специального пакета материалов
+                для защиты ВКР (Defence Mode). Приложение собирается командой
+                <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono mx-1">mvn javafx:run</code>
+                и упаковывается в self-contained дистрибутив для Windows и Linux средствами jpackage.
+              </p>
+            </div>
+          </section>
+
+          {/* ─── 2.7 ─── */}
+          <section id="sec-2.7" className="scroll-mt-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-5 pb-2 border-b-2 border-blue-200">
+              2.7. Выводы по главе 2
+            </h2>
+            <div className="space-y-4 text-justify">
+              <p>
+                В данной главе сформулирована постановка задачи исследования и разработана комплексная
+                имитационная модель системы помехоустойчивой передачи данных в 5G-подобном канале.
+                Сформулированы следующие основные результаты:
+              </p>
+              <ol className="list-decimal pl-6 space-y-3">
+                <li>
+                  Определена структурная схема имитационной модели, включающая полный тракт цифровой передачи:
+                  от генератора случайных бит через транспортный блок с CRC-16, LDPC-кодер, модулятор,
+                  OFDM/SC-waveform, замирающий канал, ZF-эквализатор и soft-демодулятор до итерационного
+                  LDPC-декодера с синдромной проверкой, а также дополнительные механизмы — rate matching,
+                  HARQ Chase Combining и адаптивную остановку.
+                </li>
+                <li>
+                  Дано математическое описание всех блоков модели: источника данных (равновероятные биты),
+                  QC-LDPC кодирования (GF(2)-умножение с трансформ-матрицей T = B⁻¹A), трёх схем модуляции
+                  с Gray-кодированием, моделей каналов AWGN (2.14) и Рэлея (2.15–2.16), многолучевого
+                  OFDM-канала (2.17), One-tap ZF-эквализации (2.19), soft-демодуляции по минимальному
+                  расстоянию (2.10) и алгоритма Normalized Min-Sum (2.21–2.24) с синдромной проверкой.
+                </li>
+                <li>
+                  Описаны четыре профиля LDPC-кодов: учебный (12, 24), QC-inspired (48, 96),
+                  5G NR BG1 (176, 368) и 5G NR BG2 (80, 416), — соответствующих возрастающей сложности
+                  и близости к стандарту 3GPP TS 38.212. Для профилей 5G NR реализован механизм загрузки
+                  сдвигов из файла базового графа и их QC-расширения до полной матрицы H.
+                </li>
+                <li>
+                  Определены восемь показателей качества и эффективности: BER, BLER (с доверительными
+                  интервалами Уилсона), среднее число итераций, доля сошедшихся блоков, спектральная
+                  эффективность, эффективная пропускная способность, требуемое SNR и энергетический выигрыш
+                  кодирования.
+                </li>
+                <li>
+                  Разработан и описан алгоритм проведения имитационного эксперимента из 12 этапов,
+                  обеспечивающий воспроизводимость через фиксированные seeds, корректное сравнение через
+                  раздельные RNG для двух режимов и адаптивное управление числом блоков.
+                </li>
+                <li>
+                  Дано описание программной реализации в виде приложения LDPC Research Studio (Java 17 +
+                  JavaFX 17), поддерживающего четыре LDPC-профиля, три алгоритма декодирования, три
+                  waveform-режима, два пространственных режима, CRC, сегментацию, rate matching и HARQ CC.
+                </li>
+              </ol>
+              <p>
+                Разработанная модель охватывает полный цикл цифровой передачи информации и создаёт необходимую
+                базу для проведения вычислительных экспериментов, результаты которых приводятся в главе 3.
+                Реализованные механизмы rate matching, HARQ и CRC соответствуют концептуальным принципам
+                стандарта 3GPP TS 38.212, что обеспечивает практическую значимость получаемых результатов
+                для оценки характеристик реальных 5G-систем.
+              </p>
+            </div>
+          </section>
+
+        </div>
+
+        {/* Footer actions */}
+        <div className="mt-16 pt-8 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-700">LDPC Research Studio — ВКР 2026</p>
+              <p className="text-xs text-slate-400 mt-0.5">github.com/ilyxa20046/VKR_2026</p>
+            </div>
+            <button
+              onClick={handleCopy}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md ${
+                copied
+                  ? "bg-green-500 text-white shadow-green-200"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200"
+              }`}
             >
-              github.com/ilyxa20046/VKR_2026
-            </a>
-          </p>
-        </footer>
+              {copied ? "✓ Текст скопирован!" : "📋 Скопировать весь текст главы"}
+            </button>
+          </div>
+        </div>
       </main>
     </div>
   );
-};
-
-export default App;
+}
