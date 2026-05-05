@@ -1,23 +1,38 @@
-import React from 'react';
-import { InlineMath, BlockMath } from 'react-katex';
-import 'katex/dist/katex.min.css';
+import React, { useEffect, useRef } from 'react';
+import katex from 'katex';
 
 interface FormulaProps {
   math: string;
   block?: boolean;
-  label?: string;
+  className?: string;
 }
 
-export const Formula: React.FC<FormulaProps> = ({ math, block, label }) => {
+const Formula: React.FC<FormulaProps> = ({ math, block = false, className = '' }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      try {
+        katex.render(math, ref.current, {
+          throwOnError: false,
+          displayMode: block,
+          output: 'html',
+        });
+      } catch (e) {
+        if (ref.current) ref.current.textContent = math;
+      }
+    }
+  }, [math, block]);
+
   if (block) {
     return (
-      <div className="flex items-center justify-center gap-4 my-4 overflow-x-auto">
-        <BlockMath math={math} />
-        {label && (
-          <span className="text-gray-500 text-sm shrink-0">({label})</span>
-        )}
+      <div className={`my-4 overflow-x-auto text-center ${className}`}>
+        <span ref={ref} />
       </div>
     );
   }
-  return <InlineMath math={math} />;
+
+  return <span ref={ref} className={`inline-block ${className}`} />;
 };
+
+export default Formula;
