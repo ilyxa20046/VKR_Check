@@ -11,7 +11,7 @@ interface FormulaProps {
 export const Formula: React.FC<FormulaProps> = ({ math, block, label }) => {
   if (block) {
     return (
-      <div className="flex items-center justify-center gap-4 my-3 overflow-x-auto">
+      <div className="flex items-center justify-center gap-4 my-4 overflow-x-auto">
         <BlockMath math={math} />
         {label && (
           <span className="text-gray-500 text-sm shrink-0">({label})</span>

@@ -2,11 +2,11 @@ import React from 'react';
 import { Formula } from './Formula';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, BarChart, Bar
+  ResponsiveContainer
 } from 'recharts';
 import {
   generateBerChartData, generateBlerChartData, generateThroughputData,
-  generateSpectralEffData, iterationData, codingGainTable
+  iterationData, codingGainTable
 } from '../data/berData';
 
 const Section: React.FC<{ title: string; id: string; children: React.ReactNode }> = ({ title, id, children }) => (
@@ -23,35 +23,33 @@ const Para: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const berData = generateBerChartData();
 const blerData = generateBlerChartData();
 const throughputData = generateThroughputData();
-const seData = generateSpectralEffData();
+
 
 const formatBer = (v: unknown) => {
   const n = Number(v);
   return isNaN(n) ? '' : n.toExponential(1);
 };
 
-
-
 export const Chapter2: React.FC = () => {
   return (
     <div>
       <h2 className="text-2xl font-bold text-center text-green-900 mb-2 uppercase tracking-wide">
-        ГЛАВА 2. АНАЛИЗ МЕТОДОВ И МАТЕМАТИЧЕСКИХ ОСНОВ СИСТЕМЫ ПОМЕХОУСТОЙЧИВОГО КОДИРОВАНИЯ
+        ГЛАВА 2. ПОСТАНОВКА ЗАДАЧИ И ИМИТАЦИОННАЯ МОДЕЛЬ СИСТЕМЫ ПОМЕХОУСТОЙЧИВОЙ ПЕРЕДАЧИ ДАННЫХ
       </h2>
       <div className="w-24 h-1 bg-green-500 mx-auto mb-8 rounded" />
 
       {/* 2.1 */}
-      <Section title="2.1. Постановка задачи моделирования" id="ch2-1">
+      <Section title="2.1. Постановка задачи исследования" id="ch2-1">
         <Para>
           Математическое описание задачи помехоустойчивого кодирования формулируется следующим образом.
-          Дан источник информации, генерирующий последовательность двоичных символов
+          Дан источник информации, генерирующий последовательность двоичных символов{' '}
           <Formula math="u = (u_1, u_2, \ldots, u_k)" />, где <Formula math="k" /> — длина
-          информационного блока. Кодер отображает вектор <Formula math="u" /> в кодовое слово
+          информационного блока. Кодер отображает вектор <Formula math="u" /> в кодовое слово{' '}
           <Formula math="x = (x_1, x_2, \ldots, x_n)" /> длины <Formula math="n > k" />, называемое
           кодовым словом линейного блокового кода <Formula math="\mathcal{C}(n, k)" />.
         </Para>
         <Para>
-          Кодовое слово <Formula math="x" /> принадлежит пространству нулей матрицы проверок на чётность
+          Кодовое слово <Formula math="x" /> принадлежит пространству нулей матрицы проверок на чётность{' '}
           <Formula math="\mathbf{H}" />:
         </Para>
 
@@ -72,15 +70,23 @@ export const Chapter2: React.FC = () => {
         <Para>
           Для LDPC-кодов кодирование выполняется через систематическую форму матрицы паритета:
           вектор <Formula math="x = (u, p)" />, где <Formula math="p = u \cdot G_{\text{sys}}" />
-          — вектор проверочных битов, вычисляемый по систематическому порождающему матрице
+          — вектор проверочных битов, вычисляемый по систематическому порождающему матрице{' '}
           <Formula math="G_{\text{sys}}" />. В стандарте 3GPP для BG1 применяется двухшаговое
           кодирование с использованием структурированной части матрицы <Formula math="\mathbf{H}" />,
           что обеспечивает линейную сложность кодирования <Formula math="O(n)" />.
         </Para>
+
+        <Para>
+          Цель имитационного эксперимента состоит в определении зависимостей BER и BLER от отношения
+          <Formula math="E_b/N_0" /> для различных конфигураций системы: профилей LDPC (учебный (24,12),
+          QC-LDPC (96,48), 5G NR BG1), схем модуляции (BPSK, QPSK, 16-QAM), типов канала (AWGN,
+          Rayleigh, OFDM+AWGN) и режимов MIMO (SISO, 2×2 MRC, 2×2 ZF). Сравнение с некодированной
+          передачей позволяет определить кодовый выигрыш для каждого сценария.
+        </Para>
       </Section>
 
       {/* 2.2 */}
-      <Section title="2.2. Структурная схема исследуемого канала" id="ch2-2">
+      <Section title="2.2. Структурная схема исследуемой системы" id="ch2-2">
         <Para>
           Исследуемая система моделирования охватывает полный тракт физического уровня от источника
           информационных битов до вынесения окончательного решения на приёмнике. Математическая модель
@@ -145,7 +151,7 @@ export const Chapter2: React.FC = () => {
         </Para>
 
         <Formula
-          math="L_i = \ln \frac{P(y_i | x_i = 0)}{P(y_i | x_i = 1)} = \frac{2}{\sigma^2} \cdot y_i = \frac{4 R_c \log_2 M \cdot (E_b/N_0)}{1} \cdot y_i"
+          math="L_i = \ln \frac{P(y_i | x_i = 0)}{P(y_i | x_i = 1)} = \frac{2}{\sigma^2} \cdot y_i"
           block
           label="2.2"
         />
@@ -159,379 +165,365 @@ export const Chapter2: React.FC = () => {
       </Section>
 
       {/* 2.3 */}
-      <Section title="2.3. Математическое описание компонентов модели" id="ch2-3">
+      <Section title="2.3. Математическое описание имитационной модели" id="ch2-3">
         <Para>
           Рассмотрим детально математическое описание ключевых компонентов системы моделирования
-          в соответствии со стандартом 3GPP TS 38.212 и реализованным программным средством
-          «LDPC Research Studio».
+          в соответствии со стандартом 3GPP TS 38.212.
         </Para>
 
         <div className="space-y-5">
           {/* 2.3.1 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.1. Формирование исходной последовательности</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.1. Формирование исходной двоичной последовательности</h4>
             <Para>
-              Источник генерирует псевдослучайную двоичную последовательность (PRBS) длиной k бит с
-              равновероятным появлением 0 и 1. К информационному блоку добавляется 16-битный циклический
-              код CRC-16-CCITT с порождающим полиномом:
+              Источник информации генерирует равновероятные независимые двоичные символы{' '}
+              <Formula math="u_i \in \{0, 1\}" />, <Formula math="i = 1, \ldots, k" />.
+              Перед кодированием к блоку добавляются биты циклического избыточного кода CRC-16
+              (полином <Formula math="x^{16} + x^{12} + x^5 + 1" />) для верификации успешного
+              декодирования. После добавления CRC информационный блок имеет длину{' '}
+              <Formula math="k' = k + 16" /> бит.
             </Para>
-            <Formula
-              math="g(x) = x^{16} + x^{12} + x^5 + 1"
-              block
-              label="2.3"
-            />
-            <p className="text-sm text-gray-600 text-justify indent-4">
-              Результирующий блок из k + 16 бит поступает на вход LDPC-кодера. После декодирования
-              CRC-проверка позволяет однозначно определить наличие необнаруженных ошибок в блоке.
-            </p>
           </div>
 
           {/* 2.3.2 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.2. LDPC-кодирование</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.2. LDPC-кодирование</h4>
             <Para>
-              Кодирование LDPC выполняется путём умножения информационного вектора u на систематическую
-              порождающую матрицу G. Для QC-LDPC-кодов кодирование реализуется эффективно через
-              структурированную обратную матрицу задней части матрицы H. Кодовое слово c = (u, p),
-              где вектор проверочных символов p определяется из:
+              Для QC-LDPC кодов матрица <Formula math="\mathbf{H}" /> формируется из{' '}
+              <Formula math="a \times b" /> блоков размерности <Formula math="Z \times Z" />,
+              каждый из которых является либо нулевой матрицей, либо циклическим сдвигом единичной
+              матрицы на величину, заданную матрицей сдвигов базового графа:
             </Para>
             <Formula
-              math="\mathbf{H} \cdot [u \; p]^T = 0 \quad \Rightarrow \quad p = -\mathbf{H}_p^{-1} \cdot \mathbf{H}_s \cdot u^T"
+              math="\mathbf{H} = \begin{pmatrix} \mathbf{I}(h_{0,0}) & \cdots & \mathbf{I}(h_{0,b-1}) \\ \vdots & \ddots & \vdots \\ \mathbf{I}(h_{a-1,0}) & \cdots & \mathbf{I}(h_{a-1,b-1}) \end{pmatrix}"
               block
-              label="2.4"
+              label="2.3"
             />
-            <p className="text-sm text-gray-600 text-justify indent-4">
-              где <Formula math="\mathbf{H}_s" /> — часть матрицы H, соответствующая систематическим
-              битам, <Formula math="\mathbf{H}_p" /> — часть, соответствующая проверочным битам.
-              Для BG1 матрица <Formula math="\mathbf{H}_p" /> имеет двойную диагональную структуру,
-              что позволяет вычислять p за линейное время.
-            </p>
+            <Para>
+              где <Formula math="\mathbf{I}(p)" /> — единичная матрица, циклически сдвинутая на{' '}
+              <Formula math="p" /> позиций (<Formula math="\mathbf{I}(-1) = \mathbf{0}" />).
+              Кодирование осуществляется в систематической форме: <Formula math="x = [u \,|\, p]" />,
+              где вектор проверочных бит определяется из условия{' '}
+              <Formula math="\mathbf{H} x^T = 0" />.
+            </Para>
           </div>
 
           {/* 2.3.3 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.3. Модуляция (QAM Mapper)</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.3. Модуляция</h4>
             <Para>
-              Битовые группы кодового слова отображаются в созвездия сигналов по схеме Gray-кодирования.
-              При QPSK каждые 2 бита отображаются в один символ <Formula math="s \in \{\pm 1 \pm j\}/\sqrt{2}" />.
-              При 16-QAM каждые 4 бита — в один символ из 16 точек созвездия. Нормировочная константа
-              обеспечивает среднюю мощность символа:
+              Биты кодового слова отображаются на комплексные символы согласно схеме модуляции.
+              Для QPSK группы из 2 бит отображаются в точки созвездия:
             </Para>
             <Formula
-              math="\mathbb{E}[|s|^2] = 1, \quad s_{\text{QPSK}} = \frac{1}{\sqrt{2}}(\pm 1 \pm j), \quad s_{16\text{-QAM}} = \frac{1}{\sqrt{10}}(\pm 1, \pm 3)^2"
+              math="s = \frac{1}{\sqrt{2}} \left[ (1 - 2b_0) + j(1 - 2b_1) \right]"
               block
-              label="2.5"
+              label="2.4"
             />
+            <Para>
+              Для 16-QAM группы из 4 бит отображаются в 16-точечное созвездие с нормировкой на
+              единичную среднюю мощность символа: <Formula math="\mathbb{E}[|s|^2] = 1" />.
+            </Para>
           </div>
 
           {/* 2.3.4 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.4. OFDM-модуляция и циклический префикс</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.4. OFDM-подобный waveform и циклический префикс</h4>
             <Para>
-              Для формирования OFDM-сигнала комплексные символы <Formula math="S_k" /> распределяются
-              по N поднесущим и преобразуются обратным быстрым преобразованием Фурье (IFFT):
+              В режиме OFDM символы отображаются на <Formula math="N" /> поднесущих через обратное
+              дискретное преобразование Фурье (IDFT):
             </Para>
             <Formula
-              math="s_n = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} S_k \cdot e^{j 2\pi k n / N}, \quad n = 0, 1, \ldots, N-1"
+              math="x_n = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} X_k e^{j2\pi kn/N}, \quad n = 0, 1, \ldots, N-1"
               block
-              label="2.6"
+              label="2.5"
             />
-            <p className="text-sm text-gray-600 text-justify indent-4">
-              Добавление циклического префикса длиной <Formula math="N_{CP}" /> устраняет межсимвольную
-              интерференцию при длине импульсного отклика канала, не превышающей <Formula math="N_{CP}" />.
-              КПД OFDM: <Formula math="\eta_{\text{OFDM}} = N / (N + N_{CP})" />.
-            </p>
+            <Para>
+              После IDFT добавляется циклический префикс длиной <Formula math="N_{CP}" /> отсчётов,
+              что устраняет межсимвольную интерференцию при длине канала, не превышающей{' '}
+              <Formula math="N_{CP}" />. На приёмнике CP удаляется, после чего применяется DFT.
+            </Para>
           </div>
 
           {/* 2.3.5 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.5. Согласование скорости передачи</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.5. Пространственный режим передачи (MIMO)</h4>
             <Para>
-              Rate matching — механизм адаптации длины кодового слова к доступным ресурсным элементам
-              системы. Включает перемежение битов, сокращение (shortening) и перфорацию (puncturing)
-              в соответствии с таблицами 3GPP TS 38.212. Результирующая скорость кода:
+              В режиме MIMO 2×2 система описывается матричной моделью канала:
             </Para>
             <Formula
-              math="R_{\text{eff}} = \frac{k}{E}, \quad E = N_{RE} \cdot Q_m \cdot R_{\text{target}}"
+              math="\mathbf{y} = \mathbf{H}_{\text{MIMO}} \cdot \mathbf{s} + \mathbf{n}"
               block
-              label="2.7"
+              label="2.6"
             />
-            <p className="text-sm text-gray-600 text-justify indent-4">
-              где <Formula math="N_{RE}" /> — число ресурсных элементов, <Formula math="Q_m" /> — порядок
-              модуляции (бит/символ), <Formula math="R_{\text{target}}" /> — целевая скорость кода.
-            </p>
+            <Para>
+              где <Formula math="\mathbf{H}_{\text{MIMO}} \in \mathbb{C}^{2 \times 2}" /> — матрица
+              канала MIMO, <Formula math="\mathbf{s} \in \mathbb{C}^{2 \times 1}" /> — вектор
+              переданных символов, <Formula math="\mathbf{n}" /> — вектор шумов. При ZF-эквализации
+              восстановление сигнала выполняется как:{' '}
+              <Formula math="\hat{\mathbf{s}} = (\mathbf{H}^H \mathbf{H})^{-1} \mathbf{H}^H \mathbf{y}" />.
+            </Para>
           </div>
 
           {/* 2.3.6 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.6. Модель канала связи</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.6. Модель канала связи</h4>
             <Para>
-              В AWGN-канале к каждому комплексному отсчёту <Formula math="s_k" /> добавляется
-              комплексный гауссовский шум:
+              Модель канала AWGN: <Formula math="r_k = \sqrt{E_s} \cdot s_k + n_k" />, где{' '}
+              <Formula math="n_k \sim \mathcal{N}(0, \sigma^2)" />,{' '}
+              <Formula math="\sigma^2 = 1/(2 R_c \log_2 M \cdot E_b/N_0)" />.
+              Модель канала Рэлея с плоскими замираниями:{' '}
+              <Formula math="r_k = h_k \cdot \sqrt{E_s} \cdot s_k + n_k" />, где{' '}
+              <Formula math="h_k \sim \mathcal{CN}(0, 1)" /> — комплексный коэффициент замираний.
+              Все коэффициенты каналов генерируются независимо для каждого блока (блочные замирания).
             </Para>
-            <Formula
-              math="r_k = \sqrt{E_s} \cdot s_k + n_k, \quad n_k \sim \mathcal{CN}(0, \sigma^2)"
-              block
-              label="2.8"
-            />
-            <p className="text-sm text-gray-600 text-justify indent-4">
-              В канале Рэлея с плоскими замираниями (flat fading) каждый символ умножается на
-              комплексный коэффициент замираний:
-            </p>
-            <Formula
-              math="r_k = h_k \cdot \sqrt{E_s} \cdot s_k + n_k, \quad h_k \sim \mathcal{CN}(0, 1)"
-              block
-              label="2.9"
-            />
           </div>
 
           {/* 2.3.7 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.7. Эквализация и soft-demodulation</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.7. Эквализация и soft-demodulation</h4>
             <Para>
-              В канале с замираниями применяется ZF-эквализация (Zero-Forcing) при условии идеального
-              знания канала (perfect CSI) на приёмнике:
+              При ZF-эквализации в канале Рэлея компенсация замираний выполняется как{' '}
+              <Formula math="\hat{s}_k = r_k / h_k" />. Для AWGN-канала эквализация тривиальна
+              (единичный коэффициент усиления). Мягкое демодулирование вычисляет LLR для каждого бита
+              символа через разность логарифмов правдоподобия между точками созвездия, содержащими
+              данный бит в состоянии 0 и 1 соответственно.
             </Para>
-            <Formula
-              math="\hat{s}_k = \frac{r_k}{h_k} = \sqrt{E_s} \cdot s_k + \frac{n_k}{h_k}"
-              block
-              label="2.10"
-            />
-            <p className="text-sm text-gray-600 text-justify indent-4">
-              ZF-эквализатор устраняет межсимвольную интерференцию, но усиливает шум в глубоких провалах
-              замираний, что является его известным недостатком. Эффективный SNR после ZF-эквализации:
-            </p>
-            <Formula
-              math="\text{SNR}_{\text{eff}} = \frac{E_s / \sigma^2}{|h_k|^{-2}} = |h_k|^2 \cdot \text{SNR}"
-              block
-              label="2.11"
-            />
           </div>
 
           {/* 2.3.8 */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h4 className="font-bold text-green-800 mb-2 text-sm">2.3.8. LDPC-декодирование (алгоритм NMS)</h4>
+            <h4 className="font-bold text-green-700 mb-2">2.3.8. LDPC-декодирование (алгоритм NMS)</h4>
             <Para>
-              Обновление переменных узлов (VN update) на каждой итерации декодирования:
+              Декодирование LDPC реализуется алгоритмом нормализованного min-sum (NMS) с параметром
+              нормализации <Formula math="\alpha" />. Обновление сообщений от узлов проверок
+              к переменным узлам выполняется как:
             </Para>
             <Formula
-              math="\mu_{v \to c}^{(i)} = L_v + \sum_{c' \in \mathcal{N}(v) \setminus c} \mu_{c' \to v}^{(i-1)}"
+              math="\mu_{c \to v}^{(i)} = \alpha \cdot \left(\prod_{v' \in \mathcal{N}(c) \setminus v} \text{sign}(\mu_{v' \to c}^{(i-1)})\right) \cdot \min_{v' \in \mathcal{N}(c) \setminus v} |\mu_{v' \to c}^{(i-1)}|"
               block
-              label="2.12"
+              label="2.7"
             />
             <Para>
-              Обновление проверочных узлов (CN update) по алгоритму NMS:
+              где <Formula math="\alpha = 0.80" /> — оптимальный параметр нормализации,{' '}
+              <Formula math="\mathcal{N}(c)" /> — множество переменных узлов, смежных с узлом проверки{' '}
+              <Formula math="c" />, <Formula math="I_{\max} = 50" /> — максимальное число итераций.
+              Итерации продолжаются до выполнения всех проверок на чётность или достижения{' '}
+              <Formula math="I_{\max}" />.
             </Para>
-            <Formula
-              math="\mu_{c \to v}^{(i)} = \alpha \cdot \prod_{v' \in \mathcal{N}(c) \setminus v} \text{sgn}(\mu_{v' \to c}^{(i-1)}) \cdot \min_{v' \in \mathcal{N}(c) \setminus v} |\mu_{v' \to c}^{(i-1)}|"
-              block
-              label="2.13"
-            />
-            <p className="text-sm text-gray-600 text-justify indent-4">
-              Декодирование завершается при выполнении синдромного условия{' '}
-              <Formula math="\mathbf{H} \hat{x}^T = 0" /> или по достижении максимального числа
-              итераций <Formula math="I_{\max} = 50" />.
-            </p>
           </div>
         </div>
       </Section>
 
       {/* 2.4 */}
-      <Section title="2.4. Показатели качества и результаты моделирования" id="ch2-4">
+      <Section title="2.4. Показатели качества и эффективности модели" id="ch2-4">
         <Para>
-          В данном разделе представлены основные результаты аналитического моделирования системы
-          помехоустойчивого кодирования, включая кривые BER, BLER, пропускной способности и
-          спектральной эффективности для исследуемых LDPC-профилей.
+          Для анализа эффективности системы помехоустойчивого кодирования в модели вычисляются следующие
+          показатели качества.
         </Para>
 
-        {/* 2.4.1 - BER */}
-        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-          <p className="text-center text-sm font-semibold text-gray-600 mb-1">
-            Рисунок 2.2 — Кривые BER(Eb/N0) для LDPC-профилей в канале AWGN
-          </p>
-          <p className="text-center text-xs text-gray-500 mb-3">(BPSK/QPSK, R=1/2)</p>
-          <ResponsiveContainer width="100%" height={360}>
-            <LineChart data={berData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }} />
-              <YAxis
-                scale="log"
-                domain={[1e-7, 1]}
-                tickFormatter={formatBer}
-                label={{ value: 'BER', angle: -90, position: 'insideLeft', offset: 10 }}
-              />
-              <Tooltip formatter={formatBer} />
-              <Legend verticalAlign="top" />
-              <Line type="monotone" dataKey="Без кодирования (BPSK)" stroke="#94a3b8" strokeWidth={2} dot={false} strokeDasharray="8 4" />
-              <Line type="monotone" dataKey="LDPC (24,12) R=1/2" stroke="#2563eb" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="LDPC QC (96,48) R=1/2" stroke="#16a34a" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="5G NR BG1 QPSK AWGN" stroke="#dc2626" strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="BPSK Rayleigh (некод.)" stroke="#f59e0b" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-            </LineChart>
-          </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+          {[
+            {
+              num: '2.4.1', title: 'Вероятность битовой ошибки',
+              formula: '\\text{BER} = N_{\\text{err}} / N_{\\text{total}}',
+              desc: 'Накопленная статистика ошибочных бит информации после декодирования. Вычисляется только по информационным битам (k бит), не включая проверочные.'
+            },
+            {
+              num: '2.4.2', title: 'Вероятность блочной ошибки',
+              formula: '\\text{BLER} = N_{\\text{block err}} / N_{\\text{blocks}}',
+              desc: 'Доля блоков данных, в которых CRC-проверка не прошла после декодирования. BLER ≠ 0 даже при малом BER для длинных блоков.'
+            },
+            {
+              num: '2.4.3', title: 'Среднее число итераций',
+              formula: '\\bar{I} = \\frac{1}{N_{\\text{frames}}} \\sum_{m=1}^{N_{\\text{frames}}} I_m',
+              desc: 'Среднее число итераций декодера NMS до схождения. При высоком SNR — мало (2–5), при низком — приближается к I_max.'
+            },
+            {
+              num: '2.4.4', title: 'Спектральная эффективность',
+              formula: '\\eta = R_c \\cdot \\log_2 M \\cdot (1 - \\text{BLER}), \\text{ бит/с/Гц}',
+              desc: 'Эффективное число бит на Гц полосы с учётом кодовой скорости, порядка модуляции и вероятности блочной ошибки.'
+            },
+            {
+              num: '2.4.5', title: 'Эффективная пропускная способность',
+              formula: 'T = \\eta \\cdot B_W \\cdot \\eta_{\\text{OFDM}}, \\text{ Мбит/с}',
+              desc: 'Пропускная способность с учётом потерь на OFDM (CP-overhead ≈7%) и BLER. Используется для сравнения конфигураций.'
+            },
+            {
+              num: '2.4.6', title: 'Кодовый выигрыш',
+              formula: '\\text{CG} = (E_b/N_0)_{\\text{некод.}} - (E_b/N_0)_{\\text{код.}}, \\text{ дБ}',
+              desc: 'Разность требуемых SNR (в дБ) для достижения BER=10⁻³ без кодирования и с кодированием. Основная метрика сравнения схем FEC.'
+            },
+          ].map((item) => (
+            <div key={item.num} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <p className="text-xs font-bold text-green-700 mb-1">{item.num}. {item.title}</p>
+              <div className="text-sm overflow-x-auto mb-2">
+                <Formula math={item.formula} block />
+              </div>
+              <p className="text-xs text-gray-600">{item.desc}</p>
+            </div>
+          ))}
         </div>
 
-        <Para>
-          Анализ рисунка 2.2 показывает характерную для LDPC-кодов «водопадную» (waterfall) форму кривых
-          BER: при значениях <Formula math="E_b/N_0" /> ниже порогового BER практически не отличается от
-          некодированного, однако выше порога наблюдается резкое снижение BER на несколько порядков при
-          незначительном увеличении SNR. Профиль 5G NR BG1 (Z=8, QPSK) демонстрирует наилучшие
-          характеристики: порог декодирования составляет около 0,8 дБ, а при Eb/N0 = 3 дБ BER
-          опускается ниже 10⁻⁷.
-        </Para>
-
-        {/* 2.4.2 - BLER */}
-        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-            Рисунок 2.3 — Кривые BLER(Eb/N0) для трёх LDPC-профилей
-          </p>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={blerData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }} />
-              <YAxis
-                scale="log"
-                domain={[1e-5, 1]}
-                tickFormatter={formatBer}
-                label={{ value: 'BLER', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip formatter={formatBer} />
-              <Legend verticalAlign="top" />
-              <Line type="monotone" dataKey="LDPC (24,12)" stroke="#2563eb" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="LDPC QC (96,48)" stroke="#16a34a" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="5G NR BG1 (Z=8)" stroke="#dc2626" strokeWidth={2.5} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* 2.4.3 - Throughput */}
+        {/* BER chart */}
         <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
           <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-            Рисунок 2.4 — Эффективная пропускная способность (Мбит/с) vs Eb/N0
+            Рисунок 2.2 — Сравнение кривых BER для различных профилей LDPC (канал AWGN, BPSK/QPSK)
           </p>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={throughputData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={berData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }} />
-              <YAxis label={{ value: 'Мбит/с', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend verticalAlign="top" />
-              <Line type="monotone" dataKey="5G NR BG1 QPSK OFDM" stroke="#dc2626" strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="QC-LDPC BPSK" stroke="#16a34a" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="Учебный LDPC BPSK" stroke="#2563eb" strokeWidth={2} dot={false} />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -5 }} />
+              <YAxis scale="log" domain={[1e-8, 1]} tickFormatter={formatBer}
+                label={{ value: 'BER', angle: -90, position: 'insideLeft' }} />
+              <Tooltip formatter={(v: unknown) => Number(v).toExponential(2)} />
+              <Legend verticalAlign="top" wrapperStyle={{ fontSize: 11 }} />
+              <Line type="monotone" dataKey="Без кодирования (BPSK)" stroke="#9ca3af" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+              <Line type="monotone" dataKey="BPSK Rayleigh (некод.)" stroke="#ef4444" strokeWidth={2} dot={false} strokeDasharray="3 2" />
+              <Line type="monotone" dataKey="LDPC (24,12) R=1/2" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="LDPC QC (96,48) R=1/2" stroke="#10b981" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="5G NR BG1 QPSK AWGN" stroke="#2563eb" strokeWidth={2.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* 2.4.4 - Coding Gain table */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 my-5">
-          <h4 className="font-bold text-green-800 mb-3 text-sm">Таблица 2.1 — Энергетический выигрыш от кодирования (Coding Gain) при BER = 10⁻³</h4>
+        {/* BLER chart */}
+        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
+            Рисунок 2.3 — Кривые BLER для трёх профилей LDPC (канал AWGN)
+          </p>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={blerData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -5 }} />
+              <YAxis scale="log" domain={[1e-5, 1]} tickFormatter={formatBer}
+                label={{ value: 'BLER', angle: -90, position: 'insideLeft' }} />
+              <Tooltip formatter={(v: unknown) => Number(v).toExponential(2)} />
+              <Legend verticalAlign="top" wrapperStyle={{ fontSize: 11 }} />
+              <Line type="monotone" dataKey="LDPC (24,12)" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="LDPC QC (96,48)" stroke="#10b981" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="5G NR BG1 (Z=8)" stroke="#2563eb" strokeWidth={2.5} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Coding gain table */}
+        <div className="my-6">
+          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
+            Таблица 2.1 — Кодовый выигрыш при целевом BER = 10⁻³
+          </p>
           <div className="overflow-x-auto">
-            <table className="text-xs w-full border-collapse">
+            <table className="w-full text-sm border-collapse border border-gray-300 rounded-lg">
               <thead>
-                <tr className="bg-green-100">
-                  <th className="border border-green-200 px-3 py-2 text-left">Профиль LDPC</th>
-                  <th className="border border-green-200 px-3 py-2">Модуляция</th>
-                  <th className="border border-green-200 px-3 py-2">Канал</th>
-                  <th className="border border-green-200 px-3 py-2">SNR код. (дБ)</th>
-                  <th className="border border-green-200 px-3 py-2">SNR некод. (дБ)</th>
-                  <th className="border border-green-200 px-3 py-2 font-bold">Gain (дБ)</th>
+                <tr className="bg-green-700 text-white">
+                  <th className="border border-green-600 px-3 py-2">Профиль LDPC</th>
+                  <th className="border border-green-600 px-3 py-2">Модуляция</th>
+                  <th className="border border-green-600 px-3 py-2">Канал</th>
+                  <th className="border border-green-600 px-3 py-2">SNR код. (дБ)</th>
+                  <th className="border border-green-600 px-3 py-2">SNR некод. (дБ)</th>
+                  <th className="border border-green-600 px-3 py-2">Выигрыш (дБ)</th>
                 </tr>
               </thead>
               <tbody>
                 {codingGainTable.map((row, i) => (
                   <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-green-50'}>
-                    <td className="border border-green-200 px-3 py-2 font-medium">{row.profile}</td>
-                    <td className="border border-green-200 px-3 py-2 text-center">{row.modulation}</td>
-                    <td className="border border-green-200 px-3 py-2 text-center">{row.channel}</td>
-                    <td className="border border-green-200 px-3 py-2 text-center">{row.requiredSnrCoded}</td>
-                    <td className="border border-green-200 px-3 py-2 text-center">{row.requiredSnrUncoded}</td>
-                    <td className="border border-green-200 px-3 py-2 text-center font-bold text-green-700">{row.codingGain}</td>
+                    <td className="border border-gray-200 px-3 py-2">{row.profile}</td>
+                    <td className="border border-gray-200 px-3 py-2">{row.modulation}</td>
+                    <td className="border border-gray-200 px-3 py-2">{row.channel}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-center">{row.requiredSnrCoded}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-center">{row.requiredSnrUncoded}</td>
+                    <td className="border border-gray-200 px-3 py-2 text-center font-bold text-green-700">{row.codingGain}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
-
-        {/* 2.4.5 - Iterations */}
-        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-            Рисунок 2.5 — Среднее число итераций NMS и процент сходимости (5G NR BG1, AWGN)
-          </p>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={iterationData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -5 }} />
-              <YAxis yAxisId="left" label={{ value: 'Ср. итерации', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" label={{ value: 'Сходимость %', angle: 90, position: 'insideRight' }} />
-              <Tooltip />
-              <Legend />
-              <Bar yAxisId="left" dataKey="avgIter" name="Ср. число итераций" fill="#2563eb" />
-              <Bar yAxisId="right" dataKey="convergence" name="Сходимость %" fill="#16a34a" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* 2.4.6 */}
-        <Para>
-          Как видно из рисунка 2.5, при SNR ниже порогового (около 0 дБ) алгоритм NMS в большинстве
-          случаев не сходится за <Formula math="I_{\max} = 50" /> итераций (процент сходимости менее 40%).
-          При SNR = 4 дБ среднее число итераций снижается до 14,2, а сходимость составляет 89%.
-          При SNR ≥ 8 дБ алгоритм сходится за 3–5 итераций практически в 100% случаев.
-        </Para>
-
-        {/* 2.4.7 - SE */}
-        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
-            Рисунок 2.6 — Спектральная эффективность (бит/с/Гц) vs Eb/N0
-          </p>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={seData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -10 }} />
-              <YAxis label={{ value: 'SE (бит/с/Гц)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Legend verticalAlign="top" />
-              <Line type="monotone" dataKey="5G NR BG1 QPSK" stroke="#dc2626" strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="QC-LDPC BPSK" stroke="#16a34a" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="Без кодирования BPSK" stroke="#94a3b8" strokeWidth={2} dot={false} strokeDasharray="8 4" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
       </Section>
 
       {/* 2.5 */}
-      <Section title="2.5. Алгоритм проведения и результаты сравнительного моделирования" id="ch2-5">
+      <Section title="2.5. Алгоритм проведения имитационного эксперимента" id="ch2-5">
         <Para>
-          Сравнительный анализ LDPC-профилей по совокупности метрик позволяет сформулировать следующие
-          выводы. Профиль 5G NR BG1 (Z=8) обеспечивает наилучшие характеристики BER и BLER в канале
-          AWGN при QPSK-модуляции: coding gain 5,0 дБ при BER = 10⁻³. Максимальная пропускная
-          способность при SNR ≥ 5 дБ составляет 9,3 Мбит/с (QPSK, OFDM-128, R=1/2).
-        </Para>
-        <Para>
-          Профиль QC-LDPC (96,48) демонстрирует хорошее соотношение «сложность / производительность»:
-          coding gain 4,7 дБ при умеренной вычислительной нагрузке. Учебный профиль (24,12) при всей
-          своей простоте обеспечивает лишь 4,0 дБ выигрыша, что объясняется малой длиной блока и
-          слабыми расстояниями в коде.
+          Алгоритм проведения имитационного эксперимента построен на основе метода Монте-Карло
+          и включает следующую последовательность шагов для каждой точки SNR:
         </Para>
 
-        <div className="bg-green-50 border border-green-200 rounded-xl p-5 my-5">
-          <h4 className="font-bold text-green-800 mb-3 text-sm">Сводные результаты моделирования</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-5 my-4">
+          <ol className="space-y-2 text-sm text-gray-800">
             {[
-              { value: '5,0 дБ', label: 'Coding Gain (BG1, QPSK)', color: 'text-green-700', bg: 'bg-green-100' },
-              { value: '9,3 Мбит/с', label: 'Пик пропускной способности', color: 'text-blue-700', bg: 'bg-blue-100' },
-              { value: '0,93', label: 'КПД OFDM-128', color: 'text-yellow-700', bg: 'bg-yellow-100' },
-              { value: '10⁻⁷', label: 'Мин. BER при SNR=3 дБ', color: 'text-red-700', bg: 'bg-red-100' },
-            ].map((item, i) => (
-              <div key={i} className={`${item.bg} rounded-lg p-3 text-center`}>
-                <div className={`text-xl font-bold ${item.color}`}>{item.value}</div>
-                <div className="text-xs text-gray-600 mt-1">{item.label}</div>
-              </div>
+              'Инициализация: задать параметры эксперимента (профиль LDPC, модуляция, тип канала, диапазон SNR, число фреймов, начальный seed).',
+              'Для каждого значения Eb/N0 из заданного диапазона:',
+              '   а) Сгенерировать информационный блок u длиной k бит (равномерное распределение).',
+              '   б) Добавить CRC-16 → блок длиной k\' = k+16 бит.',
+              '   в) Закодировать LDPC-кодером (BG1/BG2) → кодовое слово x длиной n бит.',
+              '   г) Выполнить rate matching (перемежение, пробивание) согласно TS 38.212.',
+              '   д) Отобразить биты на символы QAM (BPSK/QPSK/16-QAM).',
+              '   е) Применить OFDM IFFT + добавить CP (если режим OFDM).',
+              '   ж) Пропустить через модель канала (AWGN/Rayleigh/MIMO).',
+              '   з) На приёмнике: удалить CP, применить FFT, ZF-эквализацию.',
+              '   и) Вычислить LLR для каждого бита символа.',
+              '   к) Декодировать алгоритмом NMS (α=0.80, Imax=50), зафиксировать число итераций.',
+              '   л) Проверить CRC, накопить статистику (BER, BLER, итерации).',
+              '3. После завершения всех фреймов: вычислить финальные метрики BER, BLER, SE, TP, CG.',
+              '4. Сохранить результаты в структуру ResultPoint для отображения на графиках.',
+            ].map((step, i) => (
+              <li key={i} className={`flex items-start gap-2 ${step.startsWith('   ') ? 'pl-6' : ''}`}>
+                {!step.startsWith('   ') && (
+                  <span className="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{i + 1}</span>
+                )}
+                <span>{step.replace(/^   /, '')}</span>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
+
+        {/* Throughput chart */}
+        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
+            Рисунок 2.4 — Эффективная пропускная способность (Мбит/с) от Eb/N0
+          </p>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={throughputData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -5 }} />
+              <YAxis label={{ value: 'Мбит/с', angle: -90, position: 'insideLeft' }} />
+              <Tooltip />
+              <Legend verticalAlign="top" wrapperStyle={{ fontSize: 11 }} />
+              <Line type="monotone" dataKey="5G NR BG1 QPSK OFDM" stroke="#2563eb" strokeWidth={2.5} dot={false} />
+              <Line type="monotone" dataKey="QC-LDPC BPSK" stroke="#10b981" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Учебный LDPC BPSK" stroke="#f59e0b" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Iteration chart */}
+        <div className="my-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <p className="text-center text-sm font-semibold text-gray-600 mb-3">
+            Рисунок 2.5 — Зависимость среднего числа итераций NMS и доли успешного декодирования от SNR
+          </p>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={iterationData} margin={{ top: 10, right: 40, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="snr" label={{ value: 'Eb/N0, дБ', position: 'insideBottom', offset: -5 }} />
+              <YAxis yAxisId="iter" label={{ value: 'Итерации', angle: -90, position: 'insideLeft' }} />
+              <YAxis yAxisId="conv" orientation="right" domain={[0, 100]}
+                label={{ value: 'Сходимость, %', angle: 90, position: 'insideRight' }} />
+              <Tooltip />
+              <Legend verticalAlign="top" wrapperStyle={{ fontSize: 11 }} />
+              <Line yAxisId="iter" type="monotone" dataKey="avgIter" name="Среднее итераций" stroke="#7c3aed" strokeWidth={2} />
+              <Line yAxisId="conv" type="monotone" dataKey="convergence" name="Сходимость, %" stroke="#10b981" strokeWidth={2} strokeDasharray="5 3" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <Para>
+          Таким образом, в данной главе формализована постановка задачи моделирования, разработана
+          структурная схема исследуемой системы передачи данных, дано математическое описание каждого
+          компонента модели (от генерации бит до NMS-декодирования), определены показатели качества
+          и описан алгоритм проведения имитационного эксперимента. Представленные графики BER, BLER
+          и пропускной способности демонстрируют ожидаемые характеристики системы для последующей
+          верификации результатов в главе 3.
+        </Para>
       </Section>
     </div>
   );
